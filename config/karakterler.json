@@ -1,0 +1,116 @@
+{
+  "aciklama": "Karakter kayit defteri. 'gorsel' = karakterler/ icindeki dosya, 'ses' = sesler/ icindeki ses ornegi (siz ekleyeceksiniz), 'ses_profili' = edge-tts icin voice/rate/pitch, 'gorsel_prompt' = arka plan/sahne uretiminde tutarlilik icin kullanilan Ingilizce tanim.",
+  "varsayilan_stil": "3D Pixar-style, soft cinematic lighting, warm colors, friendly, high detail",
+  "karakterler": {
+    "nurcan": {
+      "isim": "Nurcan",
+      "rol": "Anne",
+      "gorsel": "karakterler/nurcan.jpeg",
+      "ses": "sesler/nurcan.wav",
+      "stil": "3D",
+      "tts_ses": "tr-TR-EmelNeural",
+      "ses_profili": {"voice": "tr-TR-EmelNeural", "rate": "+0%", "pitch": "+0Hz"},
+      "gorsel_prompt": "young mother, long dark straight hair, big grey-blue eyes, warm gentle smile, grey camo jacket, butterfly necklace, 3D Pixar style"
+    },
+    "mert": {
+      "isim": "Mert",
+      "rol": "Baba",
+      "gorsel": "karakterler/mert.jpeg",
+      "ses": "sesler/mert.wav",
+      "stil": "3D",
+      "tts_ses": "tr-TR-AhmetNeural",
+      "ses_profili": {"voice": "tr-TR-AhmetNeural", "rate": "+0%", "pitch": "+0Hz"},
+      "gorsel_prompt": "father, short brown swept-back hair, thick eyebrows, big brown eyes, black short-sleeve button shirt, kind expression, 3D Pixar style"
+    },
+    "batu": {
+      "isim": "Batu",
+      "rol": "Cocuk",
+      "gorsel": "karakterler/batu.jpeg",
+      "ses": "sesler/batu.wav",
+      "stil": "3D",
+      "tts_ses": "tr-TR-AhmetNeural",
+      "ses_profili": {"voice": "tr-TR-EmelNeural", "rate": "+12%", "pitch": "+30Hz"},
+      "gorsel_prompt": "little boy, short brown hair, chubby cheeks, big curious eyes, black shirt, blue jeans, 3D Pixar style"
+    },
+    "can": {
+      "isim": "Can",
+      "rol": "Cocuk",
+      "gorsel": "karakterler/can.jpeg",
+      "ses": "sesler/can.wav",
+      "stil": "2D",
+      "tts_ses": "tr-TR-AhmetNeural",
+      "ses_profili": {"voice": "tr-TR-AhmetNeural", "rate": "+12%", "pitch": "+25Hz"},
+      "gorsel_prompt": "little boy, dark short hair, hazel green eyes, blue and white striped shirt, chubby happy face, 2D cartoon comic style"
+    },
+    "ece": {
+      "isim": "Ece",
+      "rol": "Kiz cocuk",
+      "gorsel": "karakterler/ece.jpeg",
+      "ses": "sesler/ece.wav",
+      "stil": "2D",
+      "tts_ses": "tr-TR-EmelNeural",
+      "ses_profili": {"voice": "tr-TR-EmelNeural", "rate": "+10%", "pitch": "+35Hz"},
+      "gorsel_prompt": "little girl, brown hair with bangs, big brown eyes, cherry earring, white star pajama top, 2D cartoon comic style"
+    },
+    "elif": {
+      "isim": "Elif Ogretmen",
+      "rol": "Ogretmen",
+      "gorsel": "karakterler/elif.jpeg",
+      "ses": "sesler/elif.wav",
+      "stil": "3D",
+      "tts_ses": "tr-TR-EmelNeural",
+      "ses_profili": {"voice": "tr-TR-EmelNeural", "rate": "+0%", "pitch": "+8Hz"},
+      "gorsel_prompt": "young woman teacher, dark hair with blonde highlights, sunglasses on head, red lipstick, black tank top, friendly smile, 3D Pixar style"
+    },
+    "dede": {
+      "isim": "Tonton Dede",
+      "rol": "Dede",
+      "gorsel": "karakterler/dede.jpeg",
+      "ses": "sesler/dede.wav",
+      "stil": "3D",
+      "tts_ses": "tr-TR-AhmetNeural",
+      "ses_profili": {"voice": "tr-TR-AhmetNeural", "rate": "-12%", "pitch": "-25Hz"},
+      "gorsel_prompt": "kind old man, white beard, patterned knit skullcap, grey cardigan over blue plaid shirt, warm joyful smile, 3D Pixar style"
+    },
+    "nine": {
+      "isim": "Tonton Nine",
+      "rol": "Nine",
+      "gorsel": "karakterler/nine.jpeg",
+      "ses": "sesler/nine.wav",
+      "stil": "3D",
+      "tts_ses": "tr-TR-EmelNeural",
+      "ses_profili": {"voice": "tr-TR-EmelNeural", "rate": "-10%", "pitch": "-20Hz"},
+      "gorsel_prompt": "kind old woman, white lace headscarf, glasses, rosy cheeks, big joyful laughing smile, 3D Pixar style"
+    },
+    "bobi": {
+      "isim": "Bobi",
+      "rol": "Kopek",
+      "gorsel": "karakterler/bobi.jpeg",
+      "ses": "sesler/bobi.wav",
+      "stil": "3D",
+      "tts_ses": "tr-TR-AhmetNeural",
+      "ses_profili": {"voice": "tr-TR-AhmetNeural", "rate": "+0%", "pitch": "-10Hz"},
+      "gorsel_prompt": "cute husky puppy, grey and white fur, big blue eyes, fluffy, sitting in grass, 3D cartoon style"
+    },
+    "duru": {
+      "isim": "Duru",
+      "rol": "Kiz cocuk",
+      "gorsel": "karakterler/duru.jpeg",
+      "ses": "sesler/duru.wav",
+      "stil": "3D",
+      "tts_ses": "tr-TR-EmelNeural",
+      "ses_profili": {"voice": "tr-TR-EmelNeural", "rate": "+16%", "pitch": "+45Hz"},
+      "gorsel_prompt": "little girl, short curly black hair, rainbow hair clip, big brown eyes, warm cheerful smile, yellow patterned sleeveless summer dress, yellow shoes, 3D Pixar style"
+    },
+    "efe": {
+      "isim": "Efe",
+      "rol": "Erkek cocuk",
+      "gorsel": "karakterler/efe.jpeg",
+      "ses": "sesler/efe.wav",
+      "stil": "3D",
+      "tts_ses": "tr-TR-AhmetNeural",
+      "ses_profili": {"voice": "tr-TR-AhmetNeural", "rate": "+15%", "pitch": "+42Hz"},
+      "gorsel_prompt": "chubby little boy, short curly brown hair, big brown eyes, cheeky mischievous grin, grey striped t-shirt under blue denim overalls, white sneakers, hands on hips, 3D Pixar style"
+    }
+  }
+}

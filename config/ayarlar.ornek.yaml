@@ -1,0 +1,49 @@
+# ------------------------------------------------------------------
+# Bu dosyayi kopyalayin -> ayarlar.yaml olarak kaydedin ve doldurun.
+# ayarlar.yaml .gitignore'dadir; API anahtarlariniz GitHub'a gitmez.
+# ------------------------------------------------------------------
+
+senaryo:
+  saglayici: "gemini"          # "gemini" veya "groq"
+  gemini_api_key: "BURAYA_GEMINI_ANAHTARINIZ"   # https://aistudio.google.com (ucretsiz)
+  groq_api_key: ""             # https://console.groq.com (ucretsiz). Doldurursaniz
+                               # Gemini kotasi (429) dolunca otomatik yedek olur.
+  model: "gemini-2.5-flash"    # ucretsiz ve hizli (1.5-flash emekliye ayrildi)
+  dil: "tr"
+
+seslendirme:
+  motor: "edge"                # "edge" (bedava, anahtarsiz) | "xtts" (yerel klon) | "kullanici" (kendi ses dosyaniz)
+  hiz: "+0%"
+
+sahne:
+  motor: "pollinations"        # "pollinations" (bedava, anahtarsiz) | "yerel_sd" (diffusers, GPU onerilir)
+  cozunurluk: "1280x720"
+  stil: "3D Pixar animation movie style background, soft cinematic lighting, colorful, highly detailed, no text, high quality"
+  # --- yalnizca motor: "yerel_sd" icin ---
+  sd_model: "stabilityai/stable-diffusion-xl-base-1.0"  # HF model kimligi
+  adim: 30                     # cikarim adimi (yuksek = kaliteli/yavas)
+  yonlendirme: 7.5             # guidance_scale (prompt'a baglilik)
+  negatif_prompt: "text, watermark, signature, blurry, lowres, deformed"
+  # seed: 42                   # (opsiyonel) tekrarlanabilir sonuc icin
+
+animasyon:
+  # "basit"     : dudak senkronu YOK, gorsel+ses -> video (kurulum/GPU gerekmez,
+  #               garanti calisir; once uctan uca test icin bunu kullanin)
+  # "sadtalker" : dudak senkronlu konusan karakter (ayrica kurulum ister)
+  # "wav2lip"   : alternatif dudak senkronu
+  motor: "basit"
+  sadtalker_yolu: "./SadTalker"   # SadTalker kurulum klasoru (yerel/Colab)
+
+montaj:
+  cozunurluk: [1280, 720]
+  fps: 24
+  arka_plan_muzik: ""          # sesler/muzik.mp3 gibi (opsiyonel)
+
+altyazi:
+  aktif: true
+  model: "small"               # faster-whisper model boyutu: tiny/base/small/medium
+
+yukleme:
+  aktif: false                 # true yapinca YouTube'a yukler
+  gizlilik: "private"          # private | unlisted | public
+  client_secret: "config/client_secret.json"   # Google Cloud'dan indireceginiz dosya

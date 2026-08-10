@@ -1,0 +1,35 @@
+# --- Senaryo ---
+google-generativeai      # Gemini API (ucretsiz kota)
+groq                     # Alternatif senaryo saglayici (ucretsiz)
+
+# --- Seslendirme ---
+edge-tts                 # Microsoft ucretsiz TTS (Turkce sesler)
+# TTS                    # (opsiyonel) Coqui XTTS ile ses klonlama - yerel
+
+# --- Sahne / gorsel ---
+requests                 # Pollinations.ai cagrilari
+Pillow                   # gorsel isleme
+# Asagidakiler yalnizca sahne.motor: "yerel_sd" icin gerekli (GPU onerilir):
+# diffusers               # yerel Stable Diffusion pipeline
+# transformers            # metin kodlayicilar
+# accelerate              # cihaz yerlesimi / cpu offload
+# torch                   # (Colab'da hazir gelir)
+# safetensors             # guvenli agirlik yukleme
+
+# --- Montaj ---
+moviepy                  # video birlestirme
+imageio-ffmpeg           # ffmpeg saglar
+
+# --- Altyazi ---
+faster-whisper           # sesten otomatik altyazi (yerel)
+
+# --- Yukleme ---
+google-api-python-client
+google-auth-oauthlib
+google-auth-httplib2
+
+# --- Genel ---
+pyyaml                   # ayar dosyasi
+
+# NOT: Konusan karakter animasyonu (SadTalker/Wav2Lip) ayri kurulur.
+# Bkz. colab/README.md  ve  src/animasyon.py

@@ -1,0 +1,107 @@
+name: Otonom Pixar Cizgi Film Uretimi (5+ Dk, Bedava)
+
+# Otonom Çizgi Film Üretim İşi (GitHub Actions)
+# - Otomatik Tetikleme: Her gün 09:00 UTC'de otonom olarak çalışır.
+# - Manuel Tetikleme: Actions -> "Otonom Pixar Cizgi Film Uretimi" -> "Run workflow".
+# - Ücretsiz AI Araçları: Edge-TTS (Ses), Pollinations (Görsel & Metin), MoviePy + FFmpeg (Render).
+# - Sonuç: Üretilen 5+ dakikalık MP4 video Artifacts kısmına yüklenir.
+
+on:
+  schedule:
+    - cron: '0 9 * * *' # Her gün saat 09:00 UTC'de otonom çalışır
+  workflow_dispatch:
+    inputs:
+      konu:
+        description: "Bolumun konusu (Bos birakilirsa otomatik secilir)"
+        required: false
+        default: "Duru, Efe ve Batu sihirli ormanda kaybolan yavru ejderhayı arıyor"
+      sure:
+        description: "Hedef sure (saniye - min 300 = 5dk)"
+        required: true
+        default: "300"
+      karakterler:
+        description: "Kullanilacak karakterler (virgulle)"
+        required: false
+        default: "duru,efe,batu"
+
+jobs:
+  uret:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Depoyu al
+        uses: actions/checkout@v4
+
+      - name: Python kur
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: ffmpeg kur (altyazi gomme + video render)
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Python bagimliliklari
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Ayar dosyasini olustur
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          if [ -n "$GROQ_API_KEY" ]; then 
+            SAGLAYICI=groq
+          elif [ -n "$GEMINI_API_KEY" ]; then 
+            SAGLAYICI=gemini
+          else 
+            SAGLAYICI=pollinations
+          fi
+          echo "Senaryo saglayici: $SAGLAYICI"
+          sed "s|^  saglayici:.*|  saglayici: \"$SAGLAYICI\"|" \
+            config/ayarlar.ornek.yaml > config/ayarlar.yaml
+
+      - name: Konu ve parametreleri ayarla
+        id: params
+        run: |
+          INPUT_KONU="${{ github.event.inputs.konu }}"
+          INPUT_SURE="${{ github.event.inputs.sure }}"
+          INPUT_KARAKTER="${{ github.event.inputs.karakterler }}"
+          
+          if [ -z "$INPUT_KONU" ]; then
+            TOPICS=("Duru ve Efe su alti kralliginda kayip hazineyi arıyor" "Batu ve Bobi uzay roketinde komik uzaylilarla karsilasiyor" "Duru Efe ve Batu zaman makinesiyle dinozorlar devrine gidiyor" "Efe ve Duru robot arkadaslari ile sihirli lunaparki kuruyor")
+            RANDOM_TOPIC=${TOPICS[$RANDOM % ${#TOPICS[@]}]}
+            INPUT_KONU="$RANDOM_TOPIC"
+          fi
+          
+          if [ -z "$INPUT_SURE" ]; then
+            INPUT_SURE="300"
+          fi
+          
+          if [ -z "$INPUT_KARAKTER" ]; then
+            INPUT_KARAKTER="duru,efe,batu"
+          fi
+          
+          echo "KONU=$INPUT_KONU" >> $GITHUB_ENV
+          echo "SURE=$INPUT_SURE" >> $GITHUB_ENV
+          echo "KARAKTERLER=$INPUT_KARAKTER" >> $GITHUB_ENV
+
+      - name: Karakter gorsellerini uret (Pixar, Pollinations AI)
+        run: python karakter_gorsel.py ${KARAKTERLER//,/ } || true
+
+      - name: 5+ Dakikalik Videoyu Uret (Otonom)
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: python main.py --konu "$KONU" --sure "$SURE" --karakterler "$KARAKTERLER"
+
+      - name: Videoyu Artifact Olarak Yükle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: otonom-pixar-cizgifilm-video
+          path: |
+            cikti/**/*.mp4
+            cikti/**/senaryo.json
+          if-no-files-found: warn
+          retention-days: 30

@@ -1,0 +1,33 @@
+# ------------------------------------------------------------------
+# GIZLI DOSYALAR — bunlar ASLA commit edilmez.
+# Gercek API anahtarlari yalnizca izlenmeyen ayarlar.yaml dosyasinda,
+# Colab Secrets'ta veya GitHub Actions Secrets'ta bulunur.
+# ANAHTARI ASLA bu dosyanin icine yazmayin — .gitignore herkese aciktir.
+# ------------------------------------------------------------------
+
+# API anahtarlari ve gizli ayarlar
+config/ayarlar.yaml
+config/client_secret.json
+config/token.json
+.env
+*.key
+
+# Uretilen ciktilar
+cikti/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+
+# Colab / notebook
+.ipynb_checkpoints/
+
+# Isletim sistemi / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
