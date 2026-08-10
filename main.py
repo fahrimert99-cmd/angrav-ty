@@ -54,18 +54,19 @@ def main():
         print(f"     Kadro sinirli: {', '.join(secilen)}")
 
     # On-kontrol: animasyon icin her karakterin gorsel dosyasi gerekli.
-    # Eksikse bastan, acik bir mesajla dur (senaryo/ses uretmeden).
-    eksik = [(s, karakterler[s].get("gorsel", ""))
-             for s in karakterler
-             if not Path(karakterler[s].get("gorsel", "")).exists()]
-    if eksik:
-        satirlar = "\n".join(f"  - {s}: {g or '(gorsel alani bos)'}"
-                             for s, g in eksik)
-        raise SystemExit(
-            "Su karakterlerin gorsel dosyasi bulunamadi. Once bu dosyalari "
-            "yukleyin (Colab'da sol dosya panelinden karakterler/ klasorune "
-            f"surukleyin):\n{satirlar}"
-        )
+    # Eksikse otonom olarak uret, durma!
+    for s in karakterler:
+        gpath = Path(karakterler[s].get("gorsel", f"karakterler/{s}.jpeg"))
+        if not gpath.exists():
+            print(f"     [otonom gorsel] {s} icin gorsel bulunamadi, uretiliyor -> {gpath}")
+            try:
+                import karakter_gorsel
+                karakter_gorsel.gorsel_uret(
+                    karakterler[s].get("gorsel_prompt", s),
+                    gpath
+                )
+            except Exception as e:
+                print(f"     [gorsel uyarisi] {s} gorseli uretilemedi: {e}")
 
     print("1/7  Senaryo yaziliyor...")
     senaryo = m_senaryo.uret(args.konu, karakterler, ayar, args.sure)

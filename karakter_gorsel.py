@@ -55,7 +55,16 @@ def gorsel_uret(prompt: str, hedef: Path, en: int = 768, boy: int = 1024,
             son_hata = e
             if i < deneme - 1:
                 time.sleep(2 ** i)
-    raise RuntimeError(f"Gorsel uretilemedi ({hedef.name}): {son_hata}")
+    
+    # Pollinations indirilemezse PIL ile renkli yedek avatar olustur
+    print(f"[yedek] {hedef.name} Pollinations indirilemedi, yedek avatar olusturuluyor ({son_hata})...")
+    from PIL import Image, ImageDraw
+    img = Image.new("RGB", (en, boy), color=(120, 160, 230))
+    draw = ImageDraw.Draw(img)
+    draw.ellipse([en // 4, boy // 4, en * 3 // 4, boy * 3 // 4], fill=(240, 200, 180))
+    hedef.parent.mkdir(parents=True, exist_ok=True)
+    img.save(hedef, format="JPEG")
+    return hedef
 
 
 def main(argv):

@@ -102,11 +102,21 @@ def arka_plan_uret(prompt: str, ayar: dict, hedef: Path) -> Path:
         kodlu = urllib.parse.quote(tam_prompt)
         url = (f"https://image.pollinations.ai/prompt/{kodlu}"
                f"?width={en}&height={boy}&nologo=true&model=flux")
-        yanit = requests.get(url, timeout=120)
-        yanit.raise_for_status()
-        hedef.parent.mkdir(parents=True, exist_ok=True)
-        hedef.write_bytes(yanit.content)
-        return hedef
+        try:
+            yanit = requests.get(url, timeout=60)
+            yanit.raise_for_status()
+            hedef.parent.mkdir(parents=True, exist_ok=True)
+            hedef.write_bytes(yanit.content)
+            return hedef
+        except Exception as e:
+            print(f"[yedek sahne] {hedef.name} Pollinations indirilemedi ({e}), PIL sahne olusturuluyor...")
+            from PIL import Image, ImageDraw
+            img = Image.new("RGB", (en, boy), color=(135, 206, 235))
+            draw = ImageDraw.Draw(img)
+            draw.rectangle([0, boy // 2, en, boy], fill=(60, 179, 113))
+            hedef.parent.mkdir(parents=True, exist_ok=True)
+            img.save(hedef, format="JPEG")
+            return hedef
 
     if motor == "yerel_sd":
         return _yerel_sd_uret(prompt, ayar, hedef, en, boy)

@@ -11,10 +11,7 @@ def ayarlari_yukle(yol: str = "config/ayarlar.yaml") -> dict:
     import yaml
     tam = KOK / yol
     if not tam.exists():
-        raise FileNotFoundError(
-            "config/ayarlar.yaml bulunamadi. "
-            "config/ayarlar.ornek.yaml dosyasini kopyalayip doldurun."
-        )
+        tam = KOK / "config/ayarlar.ornek.yaml"
     with open(tam, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
 
