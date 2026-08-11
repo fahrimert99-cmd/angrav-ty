@@ -6,8 +6,6 @@
       "isim": "Kaan",
       "rol": "Baba",
       "gorsel": "karakterler/kaan.jpeg",
-      "ses": "sesler/kaan.wav",
-      "ses_motoru": "xtts",
       "stil": "3D",
       "tts_ses": "tr-TR-AhmetNeural",
       "ses_profili": {"voice": "tr-TR-AhmetNeural", "rate": "+0%", "pitch": "+0Hz"},
