@@ -46,8 +46,11 @@ def _anahtar() -> str:
 
 
 def _base_url() -> str:
-    return os.environ.get(
-        "DASHSCOPE_BASE_URL", "https://dashscope-intl.aliyuncs.com").rstrip("/")
+    # NOT: os.environ.get(..., default) BOS string'i "tanimli" sayar; workflow
+    # tanimsiz bir secret'i "" olarak gecirdiginde varsayilan ezilir. Bu yuzden
+    # `or` ile bos degeri de varsayilana dusuruyoruz.
+    return (os.environ.get("DASHSCOPE_BASE_URL")
+            or "https://dashscope-intl.aliyuncs.com").rstrip("/")
 
 
 def _gorsel_kaynagi(gorsel: str | None, img_url: str | None) -> str:
@@ -67,7 +70,7 @@ def uret(gorsel, prompt, cikti, img_url=None, model=None,
          cozunurluk="720P", negatif="", zaman_asimi=600) -> str:
     key = _anahtar()
     base = _base_url()
-    model = model or os.environ.get("DASHSCOPE_MODEL", "wanx2.1-i2v-turbo")
+    model = model or os.environ.get("DASHSCOPE_MODEL") or "wanx2.1-i2v-turbo"
 
     gorev_gonder = base + SUBMIT_PATH
     basliklar = {
