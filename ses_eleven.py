@@ -31,6 +31,11 @@ def uret(metin: str, cikti: str, voice_id: str = VARSAYILAN_VOICE,
     if not key:
         sys.exit("HATA: ELEVENLABS_API_KEY ortam degiskeni yok "
                  "(GitHub Actions secret'i olarak ekleyin).")
+    if not key.isascii():
+        sys.exit("HATA: ELEVENLABS_API_KEY ASCII olmayan karakter iceriyor "
+                 "(or. Turkce 'ı/ş/ğ'). Secret'i ElevenLabs'ten yeniden, "
+                 "dogru kopyalayin: 'sk_' + sadece Ingilizce harf/rakam, "
+                 "bosluk/Turkce karakter olmadan.")
 
     url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
     headers = {

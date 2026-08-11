@@ -46,6 +46,10 @@ def uret(gorsel: str, ses: str, cikti: str, prompt: str = "",
     if not token:
         sys.exit("HATA: REPLICATE_API_TOKEN ortam degiskeni yok "
                  "(GitHub Actions secret'i olarak ekleyin).")
+    if not token.isascii():
+        sys.exit("HATA: REPLICATE_API_TOKEN ASCII olmayan karakter iceriyor. "
+                 "Secret'i Replicate'ten yeniden, dogru kopyalayin "
+                 "(bosluk/Turkce karakter olmadan).")
 
     headers = {
         "Authorization": f"Bearer {token}",
