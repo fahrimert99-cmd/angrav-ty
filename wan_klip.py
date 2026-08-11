@@ -70,7 +70,10 @@ def uret(gorsel, prompt, cikti, img_url=None, model=None,
          cozunurluk="720P", negatif="", zaman_asimi=600) -> str:
     key = _anahtar()
     base = _base_url()
-    model = model or os.environ.get("DASHSCOPE_MODEL") or "wanx2.1-i2v-turbo"
+    # Uluslararasi Model Studio: "wan2.x-i2v-..." (x'siz).
+    # Cin (Bailian): "wanx2.1-i2v-..." (x'li). Hesabiniza gore DASHSCOPE_MODEL
+    # veya --model ile degistirin.
+    model = model or os.environ.get("DASHSCOPE_MODEL") or "wan2.2-i2v-flash"
 
     gorev_gonder = base + SUBMIT_PATH
     basliklar = {

@@ -23,6 +23,10 @@ on:
         description: "480P | 720P | 1080P"
         required: false
         default: "720P"
+      model:
+        description: "DashScope model (uluslararasi: wan2.2-i2v-flash / wan2.1-i2v-turbo / wan2.2-i2v-plus ; Cin: wanx2.1-i2v-turbo)"
+        required: false
+        default: "wan2.2-i2v-flash"
 
 jobs:
   wan:
@@ -51,6 +55,7 @@ jobs:
             --gorsel "${{ github.event.inputs.gorsel }}" \
             --prompt "${{ github.event.inputs.prompt }}" \
             --cozunurluk "${{ github.event.inputs.cozunurluk }}" \
+            --model "${{ github.event.inputs.model }}" \
             --cikti "klipler/wan_test.mp4"
 
       - name: Klibi artifact olarak yukle
