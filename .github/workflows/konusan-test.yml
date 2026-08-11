@@ -1,0 +1,81 @@
+name: Konusan Karakter Test (ElevenLabs + wan-s2v)
+
+# Dudak senkronlu konusan karakter uretir:
+#   1) ElevenLabs -> dogal Turkce ses (metinden)
+#   2) Replicate wan-2.2-s2v -> gorsel + ses -> dudak senkronlu video
+#
+# Gerekli repo secret'lari (Settings > Secrets and variables > Actions):
+#   ELEVENLABS_API_KEY   (https://elevenlabs.io)
+#   REPLICATE_API_TOKEN  (https://replicate.com/account/api-tokens)
+#
+# Calistirma: Actions > "Konusan Karakter Test" > Run workflow.
+
+on:
+  workflow_dispatch:
+    inputs:
+      gorsel:
+        description: "Karakter gorseli (repo yolu)"
+        required: true
+        default: "karakterler/kaan.jpeg"
+      metin:
+        description: "Karakterin soyleyecegi Turkce cumle"
+        required: true
+        default: "Merhaba arkadaslar! Ben Kaan. Bugun sizinle cok eglenceli bir maceraya cikacagiz!"
+      voice_id:
+        description: "ElevenLabs voice_id (varsayilan: Adam)"
+        required: false
+        default: "pNInz6obpgDQGcFmaJgB"
+      prompt:
+        description: "Opsiyonel sahne istemi (wan-s2v icin)"
+        required: false
+        default: ""
+
+jobs:
+  konusan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Bagimliliklar
+        run: pip install requests
+
+      - name: 1) ElevenLabs ile Turkce ses uret
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+        run: |
+          if [ -z "$ELEVENLABS_API_KEY" ]; then
+            echo "::error::ELEVENLABS_API_KEY secret'i yok."; exit 1
+          fi
+          python ses_eleven.py \
+            --metin "${{ github.event.inputs.metin }}" \
+            --voice-id "${{ github.event.inputs.voice_id }}" \
+            --cikti "klipler/ses.mp3"
+
+      - name: 2) wan-s2v ile dudak senkronlu video (Replicate)
+        env:
+          REPLICATE_API_TOKEN: ${{ secrets.REPLICATE_API_TOKEN }}
+        run: |
+          if [ -z "$REPLICATE_API_TOKEN" ]; then
+            echo "::error::REPLICATE_API_TOKEN secret'i yok."; exit 1
+          fi
+          python wan_s2v_replicate.py \
+            --gorsel "${{ github.event.inputs.gorsel }}" \
+            --ses "klipler/ses.mp3" \
+            --prompt "${{ github.event.inputs.prompt }}" \
+            --cikti "klipler/konusan.mp4"
+
+      - name: Ciktilari artifact olarak yukle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: konusan-karakter
+          path: |
+            klipler/konusan.mp4
+            klipler/ses.mp3
+          if-no-files-found: warn
+          retention-days: 30
