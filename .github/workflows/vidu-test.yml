@@ -1,0 +1,64 @@
+name: Vidu Video Test (gorsel -> video)
+
+# Vidu (AI video) ile karakter gorselinden hareketli klip.
+# Secret gerekli: VIDU_API_KEY (format vda_...). https://platform.vidu.com
+
+on:
+  workflow_dispatch:
+    inputs:
+      gorsel:
+        description: "Karakter gorseli (repo yolu)"
+        required: true
+        default: "karakterler/kaan.jpeg"
+      prompt:
+        description: "Hareket/sahne istemi"
+        required: true
+        default: "cute 3D Pixar father character smiling and waving at the camera, talking, lively, smooth animation"
+      model:
+        description: "viduq1 | vidu2.0 | vidu1.5"
+        required: false
+        default: "viduq1"
+      cozunurluk:
+        description: "360p | 720p | 1080p"
+        required: false
+        default: "720p"
+      duration:
+        description: "Sure (sn)"
+        required: false
+        default: "5"
+
+jobs:
+  vidu:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Bagimliliklar
+        run: pip install requests
+
+      - name: Vidu ile video uret
+        env:
+          VIDU_API_KEY: ${{ secrets.VIDU_API_KEY }}
+        run: |
+          if [ -z "$VIDU_API_KEY" ]; then echo "::error::VIDU_API_KEY secret'i yok."; exit 1; fi
+          IMG_URL="https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/${{ github.event.inputs.gorsel }}"
+          echo "Gorsel: $IMG_URL"
+          python vidu_video.py \
+            --img-url "$IMG_URL" \
+            --prompt "${{ github.event.inputs.prompt }}" \
+            --model "${{ github.event.inputs.model }}" \
+            --cozunurluk "${{ github.event.inputs.cozunurluk }}" \
+            --duration "${{ github.event.inputs.duration }}" \
+            --cikti "klipler/vidu.mp4"
+
+      - name: Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vidu-video
+          path: klipler/vidu.mp4
+          if-no-files-found: warn
+          retention-days: 30
