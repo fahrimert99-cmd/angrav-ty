@@ -27,6 +27,14 @@ on:
         description: "DashScope model (BOS birak = otomatik dene. Elle: wan2.2-i2v-flash / wan2.1-i2v-turbo / wanx2.1-i2v-turbo)"
         required: false
         default: ""
+      anlatim:
+        description: "Klibe eklenecek Turkce seslendirme metni"
+        required: false
+        default: "Merhaba! Ben Kaan. Bugun cok eglenceli bir gun, hadi birlikte oynayalim!"
+      voice:
+        description: "edge-tts sesi (tr-TR-AhmetNeural / tr-TR-EmelNeural)"
+        required: false
+        default: "tr-TR-AhmetNeural"
 
 jobs:
   wan:
@@ -40,7 +48,7 @@ jobs:
           python-version: "3.12"
 
       - name: Bagimliliklar
-        run: pip install requests
+        run: pip install requests edge-tts moviepy imageio-ffmpeg
 
       - name: Wan ile hareketli klip uret
         env:
@@ -57,6 +65,14 @@ jobs:
             --cozunurluk "${{ github.event.inputs.cozunurluk }}" \
             --model "${{ github.event.inputs.model }}" \
             --cikti "klipler/wan_test.mp4"
+
+      - name: Turkce seslendirme ekle (edge-tts)
+        run: |
+          python wan_sesli.py \
+            --klip "klipler/wan_test.mp4" \
+            --anlatim "${{ github.event.inputs.anlatim }}" \
+            --voice "${{ github.event.inputs.voice }}" \
+            --cikti "klipler/wan_sesli.mp4"
 
       - name: Klibi artifact olarak yukle
         if: always()
