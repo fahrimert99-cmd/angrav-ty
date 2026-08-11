@@ -38,6 +38,10 @@ def uret(img_url, prompt, cikti, model="viduq1", duration=5,
     basliklar = {
         "Authorization": f"Token {key}",
         "Content-Type": "application/json",
+        "Accept": "application/json",
+        # Bazi CDN/WAF'lar python-requests UA'sini bos-govdeli 403 ile bloklar:
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                      "(KHTML, like Gecko) Chrome/124.0 Safari/537.36",
     }
     govde = {
         "model": model,
@@ -52,7 +56,12 @@ def uret(img_url, prompt, cikti, model="viduq1", duration=5,
     r = requests.post(f"{BASE}/ent/v2/img2video", headers=basliklar,
                       json=govde, timeout=90)
     if r.status_code not in (200, 201):
-        sys.exit(f"HATA: gorev gonderilemedi (HTTP {r.status_code}): {r.text}")
+        # Bos govde + 403 -> genelde WAF/erisim; teshis icin bazi header'lari bas
+        tanilar = {h: r.headers.get(h) for h in
+                   ("server", "cf-ray", "cf-mitigated", "www-authenticate",
+                    "x-request-id", "content-type")}
+        sys.exit(f"HATA: gorev gonderilemedi (HTTP {r.status_code}). "
+                 f"govde='{r.text[:400]}' tani={tanilar}")
     task_id = r.json().get("task_id") or r.json().get("id")
     if not task_id:
         sys.exit(f"HATA: task_id yok. Yanit: {r.text}")
