@@ -66,14 +66,32 @@ def _gorsel_kaynagi(gorsel: str | None, img_url: str | None) -> str:
     return f"data:{mt};base64,{b64}"
 
 
+# Otomatik denenecek model adaylari (once uluslararasi "wan2.x", sonra Cin
+# "wanx2.1"). Bir ad "Model not exist" verirse siradaki denenir; boylece
+# hesabinizin destekledigi model elle secilmeden bulunur.
+MODEL_ADAYLARI = [
+    "wan2.2-i2v-flash",
+    "wan2.2-i2v-plus",
+    "wan2.1-i2v-turbo",
+    "wan2.1-i2v-plus",
+    "wanx2.1-i2v-turbo",   # Cin (Bailian)
+    "wanx2.1-i2v-plus",
+]
+
+
+def _model_yok(resp_text: str) -> bool:
+    t = (resp_text or "").lower()
+    return "model not exist" in t or "model_not_exist" in t or "invalidmodel" in t
+
+
 def uret(gorsel, prompt, cikti, img_url=None, model=None,
          cozunurluk="720P", negatif="", zaman_asimi=600) -> str:
     key = _anahtar()
     base = _base_url()
-    # Uluslararasi Model Studio: "wan2.x-i2v-..." (x'siz).
-    # Cin (Bailian): "wanx2.1-i2v-..." (x'li). Hesabiniza gore DASHSCOPE_MODEL
-    # veya --model ile degistirin.
-    model = model or os.environ.get("DASHSCOPE_MODEL") or "wan2.2-i2v-flash"
+    # Elle model verildiyse (arg/env) sadece onu dene; yoksa aday listesini
+    # sirayla dene ("Model not exist" -> sonraki).
+    istem_model = model or os.environ.get("DASHSCOPE_MODEL")
+    adaylar = [istem_model] if istem_model else list(MODEL_ADAYLARI)
 
     gorev_gonder = base + SUBMIT_PATH
     basliklar = {
@@ -82,7 +100,6 @@ def uret(gorsel, prompt, cikti, img_url=None, model=None,
         "X-DashScope-Async": "enable",
     }
     govde = {
-        "model": model,
         "input": {
             "prompt": prompt,
             "img_url": _gorsel_kaynagi(gorsel, img_url),
@@ -95,10 +112,26 @@ def uret(gorsel, prompt, cikti, img_url=None, model=None,
     if negatif:
         govde["input"]["negative_prompt"] = negatif
 
-    print(f"[wan] gorev gonderiliyor (model={model})...")
-    r = requests.post(gorev_gonder, headers=basliklar, json=govde, timeout=60)
-    if r.status_code != 200:
+    r = None
+    secilen = None
+    for aday in adaylar:
+        istek_govde = dict(govde, model=aday)
+        print(f"[wan] model deneniyor: {aday}")
+        r = requests.post(gorev_gonder, headers=basliklar, json=istek_govde,
+                          timeout=60)
+        if r.status_code == 200:
+            secilen = aday
+            break
+        if r.status_code == 400 and _model_yok(r.text):
+            print(f"[wan]   '{aday}' bu hesapta yok, sonraki adaya geciliyor...")
+            continue
+        # Model disi bir hata (kota, parametre, yetki) -> dur ve bildir.
         sys.exit(f"HATA: gorev gonderilemedi (HTTP {r.status_code}): {r.text}")
+
+    if secilen is None:
+        sys.exit("HATA: aday model adlarindan hicbiri kabul edilmedi "
+                 f"({', '.join(adaylar)}). Son yanit: {r.text if r else '-'}")
+    print(f"[wan] kullanilan model: {secilen}")
     task_id = r.json().get("output", {}).get("task_id")
     if not task_id:
         sys.exit(f"HATA: task_id alinamadi. Yanit: {r.text}")

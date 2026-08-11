@@ -24,9 +24,9 @@ on:
         required: false
         default: "720P"
       model:
-        description: "DashScope model (uluslararasi: wan2.2-i2v-flash / wan2.1-i2v-turbo / wan2.2-i2v-plus ; Cin: wanx2.1-i2v-turbo)"
+        description: "DashScope model (BOS birak = otomatik dene. Elle: wan2.2-i2v-flash / wan2.1-i2v-turbo / wanx2.1-i2v-turbo)"
         required: false
-        default: "wan2.2-i2v-flash"
+        default: ""
 
 jobs:
   wan:
