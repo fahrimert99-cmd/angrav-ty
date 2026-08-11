@@ -97,14 +97,44 @@ def _edge_seslendir(metin, voice, rate, pitch, mp3_hedef, srt_hedef, deneme: int
     raise RuntimeError(f"edge-tts {deneme} denemede basarisiz oldu: {son_hata}")
 
 
+_XTTS_MODEL = None
+
+
+def _xtts_model():
+    """XTTS-v2 modelini bir kez yukleyip onbellekte tutar.
+
+    - COQUI_TOS_AGREED=1: model ilk kez cekilirken cikan lisans onayini
+      (interaktif "y/n" sorusu) non-interaktif ortamda (Colab/CI) otomatik
+      kabul eder; aksi halde uretim kilitlenir.
+    - GPU varsa CUDA'ya gecer (XTTS CPU'da cok yavastir).
+    - Model modul duzeyinde onbelleklenir; her replik icin ~2GB modeli
+      yeniden yuklemek yerine tek sefer yuklenir (5 dk'lik bolumde kritik).
+    """
+    global _XTTS_MODEL
+    if _XTTS_MODEL is None:
+        import os
+        os.environ.setdefault("COQUI_TOS_AGREED", "1")
+        from TTS.api import TTS
+        try:
+            import torch
+            cihaz = "cuda" if torch.cuda.is_available() else "cpu"
+        except Exception:
+            cihaz = "cpu"
+        _XTTS_MODEL = TTS(
+            "tts_models/multilingual/multi-dataset/xtts_v2").to(cihaz)
+    return _XTTS_MODEL
+
+
 def _xtts(metin: str, ornek_wav: str, hedef: Path):
     """Coqui XTTS-v2 ile ses klonlama. Kurulum: pip install coqui-tts
     (orijinal "TTS" paketi 2024'te durduruldu; coqui-tts devam eden forkudur,
-    ayni "from TTS.api import TTS" importunu kullanir)."""
-    from TTS.api import TTS
-    tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2")
-    tts.tts_to_file(text=metin, speaker_wav=ornek_wav, language="tr",
-                    file_path=str(hedef))
+    ayni "from TTS.api import TTS" importunu kullanir).
+
+    NOT: XTTS-v2 lisansi (CPML) yalnizca TICARI OLMAYAN kullanimi kapsar;
+    monetize edilen kanallar icin uygun degildir. Ticari kullanimda edge-tts
+    (Microsoft) motorunu tercih edin."""
+    _xtts_model().tts_to_file(
+        text=metin, speaker_wav=ornek_wav, language="tr", file_path=str(hedef))
 
 
 def replik_seslendir(replik: dict, karakter: dict, ayar: dict, mp3_hedef: Path) -> Path:

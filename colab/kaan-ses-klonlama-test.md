@@ -1,5 +1,14 @@
 # Kaan'ın klonlanmış sesini Colab'da test etme
 
+> ⚡ **Kolay yol:** Hazır not defteri [`colab/kaan_ses_klonlama.ipynb`](kaan_ses_klonlama.ipynb).
+> Colab'da aç:
+> [![Colab'da Aç](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fahrimert99-cmd/angrav-ty/blob/main/colab/kaan_ses_klonlama.ipynb)
+> Depoda `sesler/kaan.wav` hazır geldiği için ayrıca dosya yüklemene bile gerek yok.
+>
+> ⚠️ **Lisans:** XTTS-v2 (CPML) yalnızca **ticari olmayan** kullanım içindir; monetize kanal için Kaan'ı da `edge-tts`'e alın.
+
+Aşağıdaki elle adımlar da aynı işi yapar:
+
 1. https://colab.research.google.com → **Yeni not defteri**
 2. Menü: **Çalışma zamanı → Çalışma zamanı türünü değiştir → T4 GPU** → Kaydet
 3. Aşağıdaki 3 hücreyi sırayla yapıştırıp çalıştırın (▶️).
@@ -39,8 +48,8 @@ Ses beğenilirse, tüm bölümü Kaan'ın klonlanmış sesiyle üretmek için:
 
 ## Hücre 4 (opsiyonel) — Tüm projeyi klonla ve tam üretim yap
 ```python
-!git clone https://github.com/fahrimert99-cmd/-izgi-film.git
-%cd -izgi-film
+!git clone https://github.com/fahrimert99-cmd/angrav-ty.git
+%cd angrav-ty
 !pip install -r requirements.txt
 !pip install -q coqui-tts   # requirements.txt'te opsiyonel oldugu icin ayrica kurulur
 
