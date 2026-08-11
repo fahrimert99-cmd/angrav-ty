@@ -13,24 +13,16 @@ otonom (kendi kendine çalışan) çizgi film / YouTube videosu üreten sistem.
 
 | Kod (slug) | İsim | Rol | Görsel dosya |
 | :--- | :--- | :--- | :--- |
-| `nurcan` | Nurcan | Anne | `karakterler/nurcan.jpeg` |
-| `mert` | Mert | Baba | `karakterler/mert.jpeg` |
-| `batu` | Batu | Çocuk | `karakterler/batu.jpeg` |
-| `can` | Can | Çocuk | `karakterler/can.jpeg` |
-| `ece` | Ece | Kız çocuk | `karakterler/ece.jpeg` |
-| `elif` | Elif Öğretmen | Öğretmen | `karakterler/elif.jpeg` |
-| `dede` | Tonton Dede | Dede | `karakterler/dede.jpeg` |
-| `nine` | Tonton Nine | Nine | `karakterler/nine.jpeg` |
-| `bobi` | Bobi | Köpek (evcil hayvan) | `karakterler/bobi.jpeg` |
-| `duru` | Duru | Kız çocuk | `karakterler/duru.jpeg` |
-| `efe` | Efe | Erkek çocuk | `karakterler/efe.jpeg` |
+| `kaan` | Kaan | Baba | `karakterler/kaan.jpeg` |
+| `selin` | Selin | Anne | `karakterler/selin.jpeg` |
+| `mira` | Mira | Kız çocuk | `karakterler/mira.jpeg` |
+| `ege` | Ege | Erkek çocuk | `karakterler/ege.jpeg` |
+| `dede` | Ihsan Dede | Dede | `karakterler/dede.jpeg` |
 
 Karakterlerin tüm özellikleri (görsel tanım, ses dosyası yolu, TTS sesi)
 `config/karakterler.json` içinde tutulur. Görseller depoda hazır gelir.
 
-> ⚠️ **Stil birliği notu:** Karakterlerin çoğu 3B (Pixar tarzı), `can` ve `ece`
-> ise 2B çizgi roman tarzında. Aynı sahnede tutarlı görünüm için hepsini tek bir
-> stile getirmeniz önerilir. `config/karakterler.json` içindeki `stil` alanına bakın.
+> Tüm karakterler tutarlı, tek bir stilde: 3B (Pixar tarzı).
 
 ---
 
@@ -38,7 +30,7 @@ Karakterlerin tüm özellikleri (görsel tanım, ses dosyası yolu, TTS sesi)
 
 | Adım | Araç | Ücret | Not |
 | :--- | :--- | :--- | :--- |
-| Senaryo/diyalog | **Google Gemini API** (veya Groq) | Ücretsiz kota | Anahtar gerekir (ücretsiz) |
+| Senaryo/diyalog | **Claude API** (Haiku 4.5) — yedek: Gemini / Groq | Ücretli (küçük tutar) | Anahtar gerekir; ücretsiz Gemini/Groq'a otomatik düşer |
 | Seslendirme | **edge-tts** (Microsoft) | Tamamen bedava | Anahtarsız, Türkçe sesler |
 | Ses klonlama (ops.) | **Coqui XTTS-v2** | Bedava (yerel) | Kendi ses örneğinizden klon |
 | Konuşan karakter | **SadTalker** | Bedava (yerel/Colab) | Görsel + ses → konuşan video |
@@ -89,7 +81,8 @@ cd -izgi-film
 pip install -r requirements.txt
 
 cp config/ayarlar.ornek.yaml config/ayarlar.yaml
-#  -> ayarlar.yaml içine Gemini API anahtarını yazın (ücretsiz: aistudio.google.com)
+#  -> ayarlar.yaml içine Claude API anahtarınızı yazın (console.anthropic.com)
+#  -> anahtar yoksa/kota dolarsa Gemini (ücretsiz: aistudio.google.com) veya Groq'a otomatik düşer
 ```
 
 ---
@@ -101,7 +94,8 @@ cp config/ayarlar.ornek.yaml config/ayarlar.yaml
 — Colab'a da kendi bilgisayarına da gerek yok.
 
 1. **Tek seferlik:** Repo → **Settings → Secrets and variables → Actions → New
-   repository secret** → Ad: `GEMINI_API_KEY`, Değer: [ücretsiz anahtarın](https://aistudio.google.com).
+   repository secret** → Ad: `ANTHROPIC_API_KEY`, Değer: [Claude anahtarınız](https://console.anthropic.com).
+   (`GEMINI_API_KEY` veya `GROQ_API_KEY` eklerseniz otomatik yedek olarak kullanılır.)
 2. Repo → **Actions** sekmesi → soldan **“Video Uret”** → **Run workflow**.
 3. Konuyu/süreyi/karakterleri yaz → **Run workflow**.
 4. İş bitince aynı çalıştırma sayfasında **Artifacts → `cizgi-film-video`**'yu indir.
@@ -112,7 +106,7 @@ cp config/ayarlar.ornek.yaml config/ayarlar.yaml
 ## ▶️ Yerel kullanım
 
 ```bash
-python main.py --konu "Batu ve Bobi parkta kaybolan topu arıyor" --sure 60
+python main.py --konu "Kaan ve Selin ailesiyle Mira ve Ege'nin bahçede topu arayışı" --sure 60
 ```
 
 Sistem sırasıyla: senaryo yazar → replikleri seslendirir → her karakteri

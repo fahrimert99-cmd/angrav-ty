@@ -12,6 +12,10 @@ config/token.json
 .env
 *.key
 
+# YouTube OAuth kimlik bilgileri (ASLA repoya ekleme!)
+client_secret.json
+token.json
+
 # Uretilen ciktilar
 cikti/
 

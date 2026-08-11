@@ -32,13 +32,30 @@ GPU'sunu** kullanın.
 %cd ..
 ```
 
-5. `config/ayarlar.yaml` dosyasını oluşturup Gemini anahtarınızı girin
+4c. **XTTS ses klonlama** kurulumu (bir karakterin sesini kendi ses örneğinizden
+    klonlamak için, opsiyonel). Orijinal `TTS` (Coqui) paketi 2024'te durduruldu
+    ve artık güncel Python sürümleriyle (yerel Python 3.14 dahil) kurulmuyor;
+    bunun yerine topluluk tarafından sürdürülen **`coqui-tts`** paketini kurun
+    (aynı kod tabanı, aynı `from TTS.api import TTS` importu):
+
+```python
+!pip install coqui-tts
+```
+
+`sesler/<slug>.wav` altına 10-30 saniyelik net, tek kişilik bir ses örneği
+koyun (örn. `sesler/kaan.wav` — depoda hazır), ilgili karakterin
+`config/karakterler.json` içindeki `"ses"` alanının bu dosyayı gösterdiğinden
+emin olun, ve `config/ayarlar.yaml` içinde `seslendirme.motor: "xtts"` yapın.
+Bu motor **tüm** karakterler için geçerli olur — klonlanmamış diğer
+karakterlerin de `sesler/<slug>.wav` örneği olmalı, yoksa hata verir.
+
+5. `config/ayarlar.yaml` dosyasını oluşturup Claude/Gemini anahtarınızı girin
    (Colab'da sol paneldeki dosya gezgininden düzenleyebilirsiniz).
 
 6. Bir bölüm üretin:
 
 ```python
-!python main.py --konu "Batu ve Bobi parkta topu arıyor" --sure 60
+!python main.py --konu "Kaan ve Selin'in çocukları Mira ile Ege bahçede saklambaç oynuyor" --sure 60
 ```
 
 7. Çıktı `cikti/` klasöründe oluşur; sol panelden indirebilirsiniz.

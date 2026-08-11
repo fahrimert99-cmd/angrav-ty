@@ -4,17 +4,21 @@
 # ------------------------------------------------------------------
 
 senaryo:
-  saglayici: "gemini"          # "gemini" veya "groq"
-  gemini_api_key: "BURAYA_GEMINI_ANAHTARINIZ"   # https://aistudio.google.com (ucretsiz)
-  groq_api_key: ""             # https://console.groq.com (ucretsiz). Doldurursaniz
-                               # Gemini kotasi (429) dolunca otomatik yedek olur.
-  model: "gemini-2.5-flash"    # ucretsiz ve hizli (1.5-flash emekliye ayrildi)
+  saglayici: "claude"           # "claude" | "gemini" | "groq"
+  claude_api_key: "BURAYA_CLAUDE_ANAHTARINIZ"  # https://console.anthropic.com
+  model: "claude-haiku-4-5"     # ucuz + hizli, yapilandirilmis JSON senaryo icin yeterli
+  gemini_api_key: "BURAYA_GEMINI_ANAHTARINIZ"  # https://aistudio.google.com (ucretsiz, yedek)
+  gemini_model: "gemini-2.5-flash"    # Gemini yedege dustugunde kullanilacak model
+  groq_api_key: ""              # https://console.groq.com (ucretsiz). Doldurursaniz
+                                # Claude/Gemini kotasi/hatasi durumunda otomatik yedek olur.
   dil: "tr"
 
 seslendirme:
   motor: "edge"                # "edge" (bedava, anahtarsiz) | "xtts" (yerel klon) | "kullanici" (kendi ses dosyaniz)
+  # NOT: karakterler.json'da bir karaktere "ses_motoru": "xtts" eklerseniz sadece
+  # o karakter icin bu genel motoru gecersiz kilar (orn. tek bir karakteri
+  # klonlanmis sesle, digerlerini edge-tts ile seslendirmek icin).
   hiz: "+0%"
-
 sahne:
   motor: "pollinations"        # "pollinations" (bedava, anahtarsiz) | "yerel_sd" (diffusers, GPU onerilir)
   cozunurluk: "1280x720"

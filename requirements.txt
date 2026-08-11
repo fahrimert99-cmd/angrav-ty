@@ -1,10 +1,12 @@
 # --- Senaryo ---
-google-generativeai      # Gemini API (ucretsiz kota)
-groq                     # Alternatif senaryo saglayici (ucretsiz)
+anthropic                # Claude API (varsayilan senaryo saglayicisi)
+google-generativeai      # Gemini API (ucretsiz kota, yedek)
+groq                     # Alternatif senaryo saglayici (ucretsiz, yedek)
 
 # --- Seslendirme ---
 edge-tts                 # Microsoft ucretsiz TTS (Turkce sesler)
-# TTS                    # (opsiyonel) Coqui XTTS ile ses klonlama - yerel
+# coqui-tts               # (opsiyonel) XTTS ile ses klonlama - Colab'da kurun
+                          # (orijinal "TTS" paketi 2024'te durduruldu, yerine gecti)
 
 # --- Sahne / gorsel ---
 requests                 # Pollinations.ai cagrilari

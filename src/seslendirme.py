@@ -98,7 +98,9 @@ def _edge_seslendir(metin, voice, rate, pitch, mp3_hedef, srt_hedef, deneme: int
 
 
 def _xtts(metin: str, ornek_wav: str, hedef: Path):
-    """Coqui XTTS-v2 ile ses klonlama. Kurulum: pip install TTS"""
+    """Coqui XTTS-v2 ile ses klonlama. Kurulum: pip install coqui-tts
+    (orijinal "TTS" paketi 2024'te durduruldu; coqui-tts devam eden forkudur,
+    ayni "from TTS.api import TTS" importunu kullanir)."""
     from TTS.api import TTS
     tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2")
     tts.tts_to_file(text=metin, speaker_wav=ornek_wav, language="tr",
@@ -107,8 +109,14 @@ def _xtts(metin: str, ornek_wav: str, hedef: Path):
 
 def replik_seslendir(replik: dict, karakter: dict, ayar: dict, mp3_hedef: Path) -> Path:
     """Tek bir replik icin ses dosyasi (edge modunda ayrica .srt) uretir ve
-    ses dosyasinin yolunu dondurur."""
-    motor = ayar["seslendirme"]["motor"]
+    ses dosyasinin yolunu dondurur.
+
+    Karakterde 'ses_motoru' tanimliysa (orn. klonlanmis sesi olan tek bir
+    karakter) o motor kullanilir; tanimli degilse ayarlardaki genel motora
+    duser. Boylece bazi karakterler XTTS klonlama kullanirken, ornegi olmayan
+    digerleri edge-tts'te kalabilir.
+    """
+    motor = karakter.get("ses_motoru") or ayar["seslendirme"]["motor"]
     metin = replik["metin"]
     mp3_hedef = Path(mp3_hedef)
 
@@ -118,8 +126,17 @@ def replik_seslendir(replik: dict, karakter: dict, ayar: dict, mp3_hedef: Path) 
                         mp3_hedef.with_suffix(".srt"))
         return mp3_hedef
     if motor == "xtts":
-        _xtts(metin, karakter["ses"], mp3_hedef)
-        return mp3_hedef
+        try:
+            _xtts(metin, karakter["ses"], mp3_hedef)
+            return mp3_hedef
+        except Exception as e:
+            # TTS paketi kurulu degil (orn. yerelde Python 3.14) veya klonlama
+            # basarisiz oldu -> uretimi durdurmadan edge-tts'e dus.
+            print(f"[ses yedegi] xtts basarisiz ({e}), edge-tts'e donuluyor...")
+            voice, rate, pitch = _ses_profili(karakter, ayar)
+            _edge_seslendir(metin, voice, rate, pitch, mp3_hedef,
+                            mp3_hedef.with_suffix(".srt"))
+            return mp3_hedef
     if motor == "kullanici":
         # Hazir ses dosyalarini kullanici klasore koyar; var olan dosyayi
         # isaret ederiz (replikte "ses_dosyasi" alani beklenir).
