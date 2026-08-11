@@ -1,0 +1,73 @@
+name: Hepsi-Bir-Arada Video (Wan3.0 / tek model)
+
+# TEK modelle ses+video birlikte: gorsel + prompt -> (sesli) video.
+# ElevenLabs/edge-tts YOK; ses (varsa) modelin kendisinden gelir.
+# Mevcut DASHSCOPE_API_KEY secret'ini kullanir.
+#
+# ONEMLI: 'model' alanina konsolundaki API model kimligini yaz
+#   ( or. Wan3.0-Video'nun API'deki 'model' degeri). Konsol > modele tikla >
+#   "API / View Code" ornegindeki model string'i.
+#   Bos birakirsan i2v adaylari denenir (bunlar genelde SESSIZ hareket verir).
+
+on:
+  workflow_dispatch:
+    inputs:
+      gorsel:
+        description: "Karakter gorseli (repo yolu)"
+        required: true
+        default: "karakterler/kaan.jpeg"
+      prompt:
+        description: "Sahne + (isteniyorsa) konusma. Or: Kaan guler ve Turkce 'Merhaba arkadaslar!' der"
+        required: true
+        default: "A cute 3D Pixar father character smiling and speaking cheerfully to the camera, talking, natural mouth movement, lively"
+      model:
+        description: "API model kimligi (konsoldan; Wan3.0-Video'nun 'model' degeri). Bos = i2v adaylari (sessiz)."
+        required: false
+        default: ""
+      cozunurluk:
+        description: "480P | 720P | 1080P"
+        required: false
+        default: "720P"
+
+jobs:
+  uret:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Bagimliliklar
+        run: pip install requests
+
+      - name: Tek modelle (sesli) video uret
+        env:
+          DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
+          DASHSCOPE_BASE_URL: ${{ secrets.DASHSCOPE_BASE_URL }}
+        run: |
+          if [ -z "$DASHSCOPE_API_KEY" ]; then echo "::error::DASHSCOPE_API_KEY yok"; exit 1; fi
+          python wan_klip.py \
+            --gorsel "${{ github.event.inputs.gorsel }}" \
+            --prompt "${{ github.event.inputs.prompt }}" \
+            --model "${{ github.event.inputs.model }}" \
+            --cozunurluk "${{ github.event.inputs.cozunurluk }}" \
+            --cikti "klipler/allinone.mp4"
+
+      - name: Sesli mi kontrol et (ffprobe)
+        if: always()
+        run: |
+          if [ -f klipler/allinone.mp4 ]; then
+            sudo apt-get update -q && sudo apt-get install -y ffmpeg >/dev/null 2>&1 || true
+            echo "=== Ses akisi var mi? ==="
+            ffprobe -v error -select_streams a -show_entries stream=codec_type -of csv=p=0 klipler/allinone.mp4 || echo "ses akisi YOK (model sessiz uretmis)"
+          fi
+
+      - name: Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allinone-video
+          path: klipler/allinone.mp4
+          if-no-files-found: warn
+          retention-days: 30
