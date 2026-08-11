@@ -1,33 +1,34 @@
 name: Hepsi-Bir-Arada Video (Wan3.0 / tek model)
 
-# TEK modelle ses+video birlikte: gorsel + prompt -> (sesli) video.
-# ElevenLabs/edge-tts YOK; ses (varsa) modelin kendisinden gelir.
-# Mevcut DASHSCOPE_API_KEY secret'ini kullanir.
+# TEK modelle (wan3.0-video) video uretir; ses (varsa) modelden gelir.
+# ElevenLabs/edge-tts YOK. Mevcut DASHSCOPE_API_KEY secret'ini kullanir.
 #
-# ONEMLI: 'model' alanina konsolundaki API model kimligini yaz
-#   ( or. Wan3.0-Video'nun API'deki 'model' degeri). Konsol > modele tikla >
-#   "API / View Code" ornegindeki model string'i.
-#   Bos birakirsan i2v adaylari denenir (bunlar genelde SESSIZ hareket verir).
+# Varsayilan: text-to-video (sadece prompt) - konsoldaki resmi ornekle ayni.
+# 'gorsel' doldurursan i2v denenir (o gorseli baslangic karesi gibi kullanmayi dener).
 
 on:
   workflow_dispatch:
     inputs:
-      gorsel:
-        description: "Karakter gorseli (repo yolu)"
-        required: true
-        default: "karakterler/kaan.jpeg"
       prompt:
-        description: "Sahne + (isteniyorsa) konusma. Or: Kaan guler ve Turkce 'Merhaba arkadaslar!' der"
+        description: "Sahne + (isteniyorsa) konusma metni"
         required: true
-        default: "A cute 3D Pixar father character smiling and speaking cheerfully to the camera, talking, natural mouth movement, lively"
-      model:
-        description: "API model kimligi (konsoldan; Wan3.0-Video'nun 'model' degeri). Bos = i2v adaylari (sessiz)."
+        default: "A cute 3D Pixar style father character smiling warmly at the camera and speaking cheerfully, natural talking mouth movement, lively, high quality"
+      gorsel:
+        description: "Opsiyonel karakter gorseli (repo yolu). Bos = text-to-video"
         required: false
         default: ""
+      model:
+        description: "Model id (varsayilan wan3.0-video)"
+        required: false
+        default: "wan3.0-video"
       cozunurluk:
         description: "480P | 720P | 1080P"
         required: false
-        default: "720P"
+        default: "480P"
+      duration:
+        description: "Sure (sn)"
+        required: false
+        default: "5"
 
 jobs:
   uret:
@@ -41,17 +42,24 @@ jobs:
       - name: Bagimliliklar
         run: pip install requests
 
-      - name: Tek modelle (sesli) video uret
+      - name: Wan3.0-Video ile uret
         env:
           DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
           DASHSCOPE_BASE_URL: ${{ secrets.DASHSCOPE_BASE_URL }}
         run: |
           if [ -z "$DASHSCOPE_API_KEY" ]; then echo "::error::DASHSCOPE_API_KEY yok"; exit 1; fi
-          python wan_klip.py \
-            --gorsel "${{ github.event.inputs.gorsel }}" \
+          IMG_ARG=""
+          if [ -n "${{ github.event.inputs.gorsel }}" ]; then
+            IMG_URL="https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/${{ github.event.inputs.gorsel }}"
+            echo "i2v gorsel: $IMG_URL"
+            IMG_ARG="--img-url $IMG_URL"
+          fi
+          python wan3_video.py \
             --prompt "${{ github.event.inputs.prompt }}" \
             --model "${{ github.event.inputs.model }}" \
             --cozunurluk "${{ github.event.inputs.cozunurluk }}" \
+            --duration "${{ github.event.inputs.duration }}" \
+            $IMG_ARG \
             --cikti "klipler/allinone.mp4"
 
       - name: Sesli mi kontrol et (ffprobe)
@@ -59,8 +67,8 @@ jobs:
         run: |
           if [ -f klipler/allinone.mp4 ]; then
             sudo apt-get update -q && sudo apt-get install -y ffmpeg >/dev/null 2>&1 || true
-            echo "=== Ses akisi var mi? ==="
-            ffprobe -v error -select_streams a -show_entries stream=codec_type -of csv=p=0 klipler/allinone.mp4 || echo "ses akisi YOK (model sessiz uretmis)"
+            echo "=== Ses akisi (varsa 'audio' yazar) ==="
+            ffprobe -v error -select_streams a -show_entries stream=codec_type -of csv=p=0 klipler/allinone.mp4 || echo "ses akisi YOK"
           fi
 
       - name: Artifact
