@@ -1,0 +1,63 @@
+name: Wan Gorsel->Video Test (DashScope)
+
+# Tek bir karakter gorselinden HAREKETLI klip uretir (Wan / Tongyi Wanxiang).
+# Anahtar repo secret'i olarak saklanir: Settings > Secrets > Actions >
+#   DASHSCOPE_API_KEY  (zorunlu)
+#   DASHSCOPE_BASE_URL (opsiyonel; Cin hesabi icin https://dashscope.aliyuncs.com)
+#
+# Calistirma: Actions > "Wan Gorsel->Video Test" > Run workflow.
+# Cikan klip "wan-klip" artifact'inda iner.
+
+on:
+  workflow_dispatch:
+    inputs:
+      gorsel:
+        description: "Karakter gorseli (repo yolu)"
+        required: true
+        default: "karakterler/kaan.jpeg"
+      prompt:
+        description: "Hareket istemi (Ingilizce)"
+        required: true
+        default: "cute 3D Pixar boy playing happily, waving his hands, bouncing, lively smooth cartoon animation"
+      cozunurluk:
+        description: "480P | 720P | 1080P"
+        required: false
+        default: "720P"
+
+jobs:
+  wan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Bagimliliklar
+        run: pip install requests
+
+      - name: Wan ile hareketli klip uret
+        env:
+          DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
+          DASHSCOPE_BASE_URL: ${{ secrets.DASHSCOPE_BASE_URL }}
+        run: |
+          if [ -z "$DASHSCOPE_API_KEY" ]; then
+            echo "::error::DASHSCOPE_API_KEY secret'i tanimli degil. Settings > Secrets > Actions'tan ekleyin."
+            exit 1
+          fi
+          python wan_klip.py \
+            --gorsel "${{ github.event.inputs.gorsel }}" \
+            --prompt "${{ github.event.inputs.prompt }}" \
+            --cozunurluk "${{ github.event.inputs.cozunurluk }}" \
+            --cikti "klipler/wan_test.mp4"
+
+      - name: Klibi artifact olarak yukle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wan-klip
+          path: klipler/*.mp4
+          if-no-files-found: warn
+          retention-days: 30
