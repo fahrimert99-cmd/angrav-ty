@@ -9,7 +9,29 @@ from pathlib import Path
 
 from src.video_araci import (
     moviepy_yukle, sure_ver, konum_ver, ses_ver, boyutlandir, ses_olcek,
+    kirp, sessiz,
 )
+
+# Hareketli (video) arka plan olarak taninacak dosya uzantilari.
+VIDEO_UZANTILARI = (".mp4", ".mov", ".webm", ".mkv", ".m4v")
+
+
+def _zemin_yap(mp, arka, en, boy, sure):
+    """Arka plan yolundan, tam `sure` uzunlugunda ve (en, boy) boyutunda bir
+    zemin klibi kurar. Dosya video ise (Pexels hareketli arka plan) sesi
+    kaldirilir ve gerekirse dongulenerek/kirpilarak sureye uydurulur; degilse
+    (sabit gorsel) ImageClip kullanilir."""
+    if arka.lower().endswith(VIDEO_UZANTILARI):
+        ham = sessiz(mp.VideoFileClip(arka))
+        if ham.duration >= sure:
+            zemin = kirp(ham, 0, sure)
+        else:
+            # Konusma suresi arka plandan uzunsa videoyu bas basa dongule.
+            adet = int(sure // ham.duration) + 1
+            zemin = kirp(mp.concatenate_videoclips([ham] * adet), 0, sure)
+    else:
+        zemin = sure_ver(mp.ImageClip(arka), sure)
+    return boyutlandir(zemin, (en, boy))
 
 
 def _parcayi_olustur(mp, sahne, replik, en, boy):
@@ -25,9 +47,7 @@ def _parcayi_olustur(mp, sahne, replik, en, boy):
     if arka:
         if not Path(arka).exists():
             raise FileNotFoundError(f"Arka plan gorseli bulunamadi: {arka}")
-        zemin = boyutlandir(
-            sure_ver(mp.ImageClip(arka), konusan.duration),
-            (en, boy))
+        zemin = _zemin_yap(mp, arka, en, boy, konusan.duration)
         # konusan karakteri arka planin ortasina/altina yerlestir
         konusan = konum_ver(konusan, ("center", "bottom"))
         kare = mp.CompositeVideoClip([zemin, konusan], size=(en, boy))

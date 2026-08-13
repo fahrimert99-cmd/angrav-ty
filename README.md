@@ -34,8 +34,10 @@ Karakterlerin tüm özellikleri (görsel tanım, ses dosyası yolu, TTS sesi)
 | Seslendirme | **edge-tts** (Microsoft) | Tamamen bedava | Anahtarsız, Türkçe sesler |
 | Ses klonlama (ops.) | **Coqui XTTS-v2** | Bedava (yerel) | Kendi ses örneğinizden klon |
 | Konuşan karakter | **SadTalker** | Bedava (yerel/Colab) | Görsel + ses → konuşan video |
+| Konuşan karakter (uzak) | **SadTalker HF Space** | Bedava (kota/kuyruk) | Yerel GPU'suz; `sadtalker_hf` motoru bir Hugging Face Space'i çağırır |
 | Dudak senkronu (alt.) | **Wav2Lip** | Bedava (yerel) | SadTalker alternatifi |
 | Arka plan görseli | **Pollinations.ai** | Bedava, anahtarsız | Yerel SD de olur |
+| Arka plan (stok) | **Pexels** foto/video | Bedava (API anahtarı) | `pexels_foto` (sabit) veya `pexels_video` (hareketli) arka plan |
 | Montaj | **MoviePy + FFmpeg** | Bedava | Videoları birleştirir |
 | Altyazı | **faster-whisper** | Bedava (yerel) | Sesten otomatik altyazı |
 | Yükleme | **YouTube Data API v3** | Bedava kota | Google Cloud'da proje açılır |
@@ -96,6 +98,8 @@ cp config/ayarlar.ornek.yaml config/ayarlar.yaml
 1. **Tek seferlik:** Repo → **Settings → Secrets and variables → Actions → New
    repository secret** → Ad: `ANTHROPIC_API_KEY`, Değer: [Claude anahtarınız](https://console.anthropic.com).
    (`GEMINI_API_KEY` veya `GROQ_API_KEY` eklerseniz otomatik yedek olarak kullanılır.)
+   `PEXELS_API_KEY` ([ücretsiz](https://www.pexels.com/api/)) eklerseniz arka planlar
+   **hareketli Pexels stok videosundan** üretilir; eklemezseniz varsayılan Pollinations kalır.
 2. Repo → **Actions** sekmesi → soldan **“Video Uret”** → **Run workflow**.
 3. Konuyu/süreyi/karakterleri yaz → **Run workflow**.
 4. İş bitince aynı çalıştırma sayfasında **Artifacts → `cizgi-film-video`**'yu indir.

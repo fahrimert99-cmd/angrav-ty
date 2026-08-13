@@ -59,3 +59,14 @@ def boyutlandir(clip, *args, **kw):
 def ses_olcek(ses, carpan):
     """Ses seviyesini olcekler (with_volume_scaled / volumex)."""
     return _cagir(ses, ("with_volume_scaled", "volumex"), carpan)
+
+
+def kirp(clip, bas, son):
+    """Klibi [bas, son] araligina kirpar (subclipped / subclip)."""
+    return _cagir(clip, ("subclipped", "subclip"), bas, son)
+
+
+def sessiz(clip):
+    """Klibin sesini kaldirir (without_audio); yoksa klibi aynen dondurur."""
+    m = getattr(clip, "without_audio", None)
+    return m() if callable(m) else clip

@@ -20,9 +20,18 @@ seslendirme:
   # klonlanmis sesle, digerlerini edge-tts ile seslendirmek icin).
   hiz: "+0%"
 sahne:
-  motor: "pollinations"        # "pollinations" (bedava, anahtarsiz) | "yerel_sd" (diffusers, GPU onerilir)
+  # "pollinations" : bedava, anahtarsiz AI gorsel (sabit)
+  # "yerel_sd"     : yerel Stable Diffusion (diffusers, GPU onerilir, sabit)
+  # "pexels_foto"  : Pexels stok FOTOGRAFI (sabit, gercek foto)
+  # "pexels_video" : Pexels stok VIDEOSU (HAREKETLI arka plan)
+  motor: "pollinations"
   cozunurluk: "1280x720"
   stil: "3D Pixar animation movie style background, soft cinematic lighting, colorful, highly detailed, no text, high quality"
+  # --- yalnizca motor: "pexels_foto" / "pexels_video" icin ---
+  # Ucretsiz anahtar: https://www.pexels.com/api/  (PEXELS_API_KEY ortam
+  # degiskeni de kullanilabilir; GitHub Actions'ta secret olarak ekleyin).
+  # Pexels basarisiz olursa/anahtar yoksa otomatik Pollinations'a duser.
+  pexels_api_key: ""
   # --- yalnizca motor: "yerel_sd" icin ---
   sd_model: "stabilityai/stable-diffusion-xl-base-1.0"  # HF model kimligi
   adim: 30                     # cikarim adimi (yuksek = kaliteli/yavas)
@@ -31,12 +40,23 @@ sahne:
   # seed: 42                   # (opsiyonel) tekrarlanabilir sonuc icin
 
 animasyon:
-  # "basit"     : dudak senkronu YOK, gorsel+ses -> video (kurulum/GPU gerekmez,
-  #               garanti calisir; once uctan uca test icin bunu kullanin)
-  # "sadtalker" : dudak senkronlu konusan karakter (ayrica kurulum ister)
-  # "wav2lip"   : alternatif dudak senkronu
+  # "basit"        : dudak senkronu YOK, gorsel+ses -> video (kurulum/GPU gerekmez,
+  #                  garanti calisir; once uctan uca test icin bunu kullanin)
+  # "sadtalker"    : yerel SadTalker ile dudak senkronu (ayrica kurulum ister)
+  # "sadtalker_hf" : SadTalker'i UZAK bir Hugging Face Space uzerinden calistirir
+  #                  (yerel GPU/kurulum gerekmez; hata olursa "basit"e duser)
+  # "wav2lip"      : alternatif dudak senkronu
   motor: "basit"
   sadtalker_yolu: "./SadTalker"   # SadTalker kurulum klasoru (yerel/Colab)
+  # --- yalnizca motor: "sadtalker_hf" icin ---
+  hf_space: "kevinwang676/SadTalker"   # kullanilacak Gradio Space
+  hf_token: ""                          # ozel/ZeroGPU Space'ler icin HF token
+                                        # (bos ise HF_TOKEN ortam degiskeni denenir)
+  # hf_api_name: "/test"                # (ops.) belirli endpoint; bos ise otomatik secilir
+  # hf_params:                          # (ops.) endpoint'in ekstra parametreleri (ad -> deger)
+  #   preprocess: "full"
+  #   still_mode: true
+  #   use_enhancer: true
 
 montaj:
   cozunurluk: [1280, 720]
