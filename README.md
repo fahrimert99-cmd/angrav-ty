@@ -36,6 +36,7 @@ Karakterlerin tüm özellikleri (görsel tanım, ses dosyası yolu, TTS sesi)
 | Konuşan karakter | **SadTalker** | Bedava (yerel/Colab) | Görsel + ses → konuşan video |
 | Dudak senkronu (alt.) | **Wav2Lip** | Bedava (yerel) | SadTalker alternatifi |
 | Arka plan görseli | **Pollinations.ai** | Bedava, anahtarsız | Yerel SD de olur |
+| Arka plan (stok) | **Pexels** foto/video | Bedava (API anahtarı) | `pexels_foto` (sabit) veya `pexels_video` (hareketli) arka plan |
 | Montaj | **MoviePy + FFmpeg** | Bedava | Videoları birleştirir |
 | Altyazı | **faster-whisper** | Bedava (yerel) | Sesten otomatik altyazı |
 | Yükleme | **YouTube Data API v3** | Bedava kota | Google Cloud'da proje açılır |

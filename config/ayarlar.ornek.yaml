@@ -20,9 +20,18 @@ seslendirme:
   # klonlanmis sesle, digerlerini edge-tts ile seslendirmek icin).
   hiz: "+0%"
 sahne:
-  motor: "pollinations"        # "pollinations" (bedava, anahtarsiz) | "yerel_sd" (diffusers, GPU onerilir)
+  # "pollinations" : bedava, anahtarsiz AI gorsel (sabit)
+  # "yerel_sd"     : yerel Stable Diffusion (diffusers, GPU onerilir, sabit)
+  # "pexels_foto"  : Pexels stok FOTOGRAFI (sabit, gercek foto)
+  # "pexels_video" : Pexels stok VIDEOSU (HAREKETLI arka plan)
+  motor: "pollinations"
   cozunurluk: "1280x720"
   stil: "3D Pixar animation movie style background, soft cinematic lighting, colorful, highly detailed, no text, high quality"
+  # --- yalnizca motor: "pexels_foto" / "pexels_video" icin ---
+  # Ucretsiz anahtar: https://www.pexels.com/api/  (PEXELS_API_KEY ortam
+  # degiskeni de kullanilabilir; GitHub Actions'ta secret olarak ekleyin).
+  # Pexels basarisiz olursa/anahtar yoksa otomatik Pollinations'a duser.
+  pexels_api_key: ""
   # --- yalnizca motor: "yerel_sd" icin ---
   sd_model: "stabilityai/stable-diffusion-xl-base-1.0"  # HF model kimligi
   adim: 30                     # cikarim adimi (yuksek = kaliteli/yavas)
