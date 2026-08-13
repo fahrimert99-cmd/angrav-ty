@@ -21,17 +21,54 @@ import subprocess
 from pathlib import Path
 
 
+# Ken Burns hareketi: klip suresince yavas zoom orani (1.0 -> 1+ZOOM).
+# 0 verilirse gorsel tamamen sabit kalir (eski davranis).
+KEN_BURNS_ZOOM = 0.10
+
+
+def _hareketli_gorsel(mp, gorsel: str, sure: float, zoom: float = KEN_BURNS_ZOOM):
+    """Sabit gorseli 'canli' hale getirir: klip suresince yavas bir zoom-in
+    (Ken Burns) uygular ve sonucu ORIJINAL cerceveye kirpar. Boylece video
+    'slayt' gibi durmaz. Zoom herhangi bir sebeple yapilamazsa sabit gorsele
+    duser."""
+    from src.video_araci import sure_ver, konum_ver
+
+    taban = mp.ImageClip(gorsel)
+    if not zoom or zoom <= 0:
+        return sure_ver(taban, sure)
+
+    w, h = taban.size
+    # t=0'da 1.0, t=sure'de 1+zoom olacak sekilde lineer buyume.
+    olcek = lambda t: 1.0 + zoom * (t / max(sure, 0.1))
+    try:
+        buyuyen = None
+        for ad in ("resized", "resize"):
+            m = getattr(taban, ad, None)
+            if callable(m):
+                buyuyen = m(olcek)
+                break
+        if buyuyen is None:
+            return sure_ver(taban, sure)
+        # Buyuyen goruntuyu orijinal cerceveye ortala + kirp.
+        buyuyen = konum_ver(buyuyen, ("center", "center"))
+        kare = mp.CompositeVideoClip([buyuyen], size=(w, h))
+        return sure_ver(kare, sure)
+    except Exception:
+        return sure_ver(taban, sure)
+
+
 def _basit(gorsel: str, ses: str, hedef: Path, fps: int = 24) -> Path:
     """Dudak senkronu olmadan gorsel + ses'ten mp4 uretir (moviepy).
 
-    Ses suresince sabit karakter gorseli gosterir. Kurulum/GPU gerektirmez;
+    Ses suresince karakter gorselini gosterir; gorsele yavas bir zoom (Ken
+    Burns) uygulanir ki video 'slayt' gibi durmasin. Kurulum/GPU gerektirmez;
     SadTalker calismadiginda uctan uca videoyu garanti eder.
     """
-    from src.video_araci import moviepy_yukle, sure_ver, ses_ver
+    from src.video_araci import moviepy_yukle, ses_ver
 
     mp = moviepy_yukle()
     ses_klip = mp.AudioFileClip(ses)
-    gorsel_klip = sure_ver(mp.ImageClip(gorsel), ses_klip.duration)
+    gorsel_klip = _hareketli_gorsel(mp, gorsel, ses_klip.duration)
     gorsel_klip = ses_ver(gorsel_klip, ses_klip)
 
     hedef.parent.mkdir(parents=True, exist_ok=True)
@@ -91,55 +128,26 @@ def _sadtalker_hf(gorsel: str, ses: str, ayar: dict, hedef: Path,
     Herhangi bir hata olursa (Space uyuyor/kuyruk/imza uyumsuz/anahtar yok)
     sessizce "basit" motora dusulur; boylece uctan uca uretim durmaz.
     """
+    import time
+
     a = ayar["animasyon"]
     space = a.get("hf_space", "kevinwang676/SadTalker")
     token = a.get("hf_token") or os.environ.get("HF_TOKEN") or None
     istenen_api = a.get("hf_api_name")            # orn. "/test" (ops.)
     override = a.get("hf_params", {}) or {}       # {parametre_adi: deger}
+    deneme_sayisi = int(a.get("hf_retries", 2))   # rate-limit'te tekrar dene
+    bekleme = float(a.get("hf_bekleme", 15))      # denemeler arasi saniye
 
-    try:
-        import inspect
+    def _gorsel_ses_var(param_listesi):
+        bilesenler = [(p.get("component") or "").lower() for p in param_listesi]
+        return (any(b in ("image", "imageeditor") for b in bilesenler)
+                and any(b == "audio" for b in bilesenler))
 
-        from gradio_client import Client, handle_file
-
-        print(f"     [sadtalker_hf] {space} Space'ine baglaniliyor "
-              f"(uyuyorsa uyanmasi ~30-60sn surebilir)...")
-        # Token argumaninin adi surumden surume degisiyor
-        # (eski: hf_token, yeni: token). Imzaya bakip dogru olani gec.
-        client_kw = {}
-        if token:
-            params = inspect.signature(Client.__init__).parameters
-            if "hf_token" in params:
-                client_kw["hf_token"] = token
-            elif "token" in params:
-                client_kw["token"] = token
-        client = Client(space, **client_kw)
-        api = client.view_api(return_format="dict")
-        uclar = api.get("named_endpoints", {}) or {}
-
-        # Gorsel + ses bileseni iceren bir endpoint sec (config verdiyse onu).
-        def _uygun(param_listesi):
-            bilesenler = [(p.get("component") or "").lower() for p in param_listesi]
-            return (any(b in ("image", "imageeditor") for b in bilesenler)
-                    and any(b == "audio" for b in bilesenler))
-
-        secilen_ad, secilen = None, None
-        if istenen_api and istenen_api in uclar:
-            secilen_ad, secilen = istenen_api, uclar[istenen_api]
-        else:
-            for ad, tanim in uclar.items():
-                if _uygun(tanim.get("parameters", [])):
-                    secilen_ad, secilen = ad, tanim
-                    break
-        if secilen is None:
-            raise RuntimeError(
-                f"Space'te gorsel+ses alan endpoint bulunamadi. "
-                f"Mevcut uclar: {list(uclar)}")
-
-        # Parametreleri sirayla doldur.
+    def _arg_kur(parametreler):
+        from gradio_client import handle_file
         args = []
         gorsel_kondu = ses_kondu = False
-        for p in secilen.get("parameters", []):
+        for p in parametreler:
             bilesen = (p.get("component") or "").lower()
             ad = p.get("parameter_name")
             if bilesen in ("image", "imageeditor") and not gorsel_kondu:
@@ -155,23 +163,82 @@ def _sadtalker_hf(gorsel: str, ses: str, ayar: dict, hedef: Path,
             else:
                 deger = None
             args.append(deger)
+        return args
 
-        print(f"     [sadtalker_hf] '{secilen_ad}' cagriliyor "
-              f"({len(args)} parametre)...")
-        sonuc = client.predict(*args, api_name=secilen_ad)
+    def _bir_deneme():
+        import inspect
+
+        from gradio_client import Client
+
+        # Token argumaninin adi surumden surume degisiyor (hf_token/token).
+        client_kw = {}
+        if token:
+            params = inspect.signature(Client.__init__).parameters
+            if "hf_token" in params:
+                client_kw["hf_token"] = token
+            elif "token" in params:
+                client_kw["token"] = token
+        client = Client(space, **client_kw)
+        api = client.view_api(return_format="dict")
+        adli = api.get("named_endpoints", {}) or {}
+        adsiz = api.get("unnamed_endpoints", {}) or {}
+
+        # Once config'te istenen adli endpoint; sonra gorsel+ses alan ilk
+        # adli endpoint; olmazsa ilk uygun ADSIZ (fn_index) endpoint.
+        cagri_kw, parametreler = None, None
+        if istenen_api and istenen_api in adli:
+            cagri_kw = {"api_name": istenen_api}
+            parametreler = adli[istenen_api].get("parameters", [])
+        if parametreler is None:
+            for ad, tanim in adli.items():
+                if _gorsel_ses_var(tanim.get("parameters", [])):
+                    cagri_kw = {"api_name": ad}
+                    parametreler = tanim.get("parameters", [])
+                    break
+        if parametreler is None:
+            for idx, tanim in adsiz.items():
+                if _gorsel_ses_var(tanim.get("parameters", [])):
+                    try:
+                        cagri_kw = {"fn_index": int(idx)}
+                    except (TypeError, ValueError):
+                        cagri_kw = {"fn_index": idx}
+                    parametreler = tanim.get("parameters", [])
+                    break
+        if parametreler is None:
+            raise RuntimeError(
+                f"Space'te gorsel+ses alan endpoint bulunamadi. "
+                f"Adli: {list(adli)} | Adsiz: {list(adsiz)}")
+
+        args = _arg_kur(parametreler)
+        print(f"     [sadtalker_hf] {cagri_kw} cagriliyor ({len(args)} parametre)...")
+        sonuc = client.predict(*args, **cagri_kw)
 
         yol = _hf_sonuc_yolu(sonuc)
         if not yol or not Path(yol).exists():
             raise RuntimeError(f"Space video dondurmedi (donen: {sonuc!r})")
-
         hedef.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy(yol, hedef)
         return hedef
 
-    except Exception as e:
-        print(f"     [sadtalker_hf uyarisi] uzak uretim basarisiz ({e}); "
-              f"'basit' motora dusuluyor.")
-        return _basit(gorsel, ses, hedef, fps)
+    print(f"     [sadtalker_hf] {space} Space'ine baglaniliyor "
+          f"(uyuyorsa uyanmasi ~30-60sn surebilir)...")
+    son_hata = None
+    for deneme in range(1, deneme_sayisi + 1):
+        try:
+            return _bir_deneme()
+        except Exception as e:
+            son_hata = e
+            # Rate-limit ("too many requests") ise bekleyip tekrar dene.
+            if "too many requests" in str(e).lower() and deneme < deneme_sayisi:
+                print(f"     [sadtalker_hf] rate-limit; {bekleme:.0f}sn bekleyip "
+                      f"tekrar deneniyor ({deneme}/{deneme_sayisi})...")
+                time.sleep(bekleme)
+                continue
+            break
+
+    print(f"     [sadtalker_hf uyarisi] uzak uretim basarisiz ({son_hata}); "
+          f"'basit' motora dusuluyor.")
+    return _basit(gorsel, ses, hedef, fps)
 
 
 def _wav2lip(gorsel: str, ses: str, hedef: Path) -> Path:

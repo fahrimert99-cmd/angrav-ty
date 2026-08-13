@@ -53,10 +53,15 @@ animasyon:
   hf_token: ""                          # ozel/ZeroGPU Space'ler icin HF token
                                         # (bos ise HF_TOKEN ortam degiskeni denenir)
   # hf_api_name: "/test"                # (ops.) belirli endpoint; bos ise otomatik secilir
+  # hf_retries: 2                       # (ops.) rate-limit ("too many requests") olunca tekrar deneme
+  # hf_bekleme: 15                      # (ops.) denemeler arasi saniye
   # hf_params:                          # (ops.) endpoint'in ekstra parametreleri (ad -> deger)
   #   preprocess: "full"
   #   still_mode: true
   #   use_enhancer: true
+  # NOT: SadTalker calismazsa (public Space kuyruk/rate-limit) otomatik "basit"
+  # motora dusulur; "basit" artik gorsele yavas zoom (Ken Burns) uygular, boylece
+  # video yine de "slayt gibi" durmaz.
 
 montaj:
   cozunurluk: [1280, 720]
