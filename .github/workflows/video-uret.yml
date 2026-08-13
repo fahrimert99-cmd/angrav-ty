@@ -27,6 +27,14 @@ on:
         description: "YouTube gizlilik (public / unlisted / private)"
         required: false
         default: "public"
+      konusma_motoru:
+        description: "Karakter konusma motoru"
+        required: false
+        type: choice
+        default: "sadtalker_hf"
+        options:
+          - "basit"          # dudak senkronu YOK, garanti/hizli
+          - "sadtalker_hf"   # HF Space ile dudak senkronu (yavas olabilir; hata olursa basit'e duser)
 
 jobs:
   uret:
@@ -88,6 +96,19 @@ jobs:
             echo "Sahne motoru: pollinations (PEXELS_API_KEY yok)"
           fi
 
+          # Konusma (animasyon) motoru: manuel calistirmada secilen input;
+          # zamanlanmis calismada girdi olmadigindan "basit" (garanti) kullanilir.
+          KONUSMA="${{ github.event.inputs.konusma_motoru }}"
+          [ -z "$KONUSMA" ] && KONUSMA="basit"
+          echo "Konusma motoru: $KONUSMA"
+          sed -i "s|^  motor: \"basit\".*|  motor: \"$KONUSMA\"|" config/ayarlar.yaml
+          # Sonraki adimlar (kosullu gradio_client kurulumu) icin disari aktar.
+          echo "KONUSMA=$KONUSMA" >> "$GITHUB_ENV"
+
+      - name: gradio_client kur (yalnizca sadtalker_hf icin)
+        if: env.KONUSMA == 'sadtalker_hf'
+        run: pip install gradio_client
+
       # ──────────────────────────────────────────────
       # 3. PARAMETRELER
       # ──────────────────────────────────────────────
@@ -138,6 +159,7 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           python main.py --konu "$KONU" --sure "$SURE" --karakterler "$KARAKTERLER"
           
@@ -176,18 +198,21 @@ jobs:
           fi
 
           BASLIK="🎬 Pixar Çizgi Film | $KONU | $TARIH"
-          ACIKLAMA="🤖 Bu video yapay zekâ ile tamamen otomatik üretilmiştir!
-
-📖 Konu: $KONU
-📅 Tarih: $TARIH
-⏱️ Süre: ${SURE} saniye (5+ dakika)
-🎨 Teknoloji: Pollinations AI (Pixar görselleri) + Edge-TTS (Türkçe ses) + MoviePy
-
-Bu kanal hakkında:
-✨ Her gün yeni bir Pixar tarzı Türkçe çizgi film!
-🔔 Abone olun: Yeni bölümler otomatik olarak her gün yayınlanır.
-
-#PixarTarzı #TürkçeÇizgiFilm #YapayZeka #AI #OtonomVideo #Çocuklar"
+          # ACIKLAMA cok satirli: printf ile kur ki YAML blok-skalari
+          # girintisi bozulmasin (satirlar tirnak disinda, girintili durur).
+          ACIKLAMA=$(printf '%s\n' \
+            "🤖 Bu video yapay zekâ ile tamamen otomatik üretilmiştir!" \
+            "" \
+            "📖 Konu: $KONU" \
+            "📅 Tarih: $TARIH" \
+            "⏱️ Süre: ${SURE} saniye (5+ dakika)" \
+            "🎨 Teknoloji: Pixar görselleri + Edge-TTS (Türkçe ses) + MoviePy" \
+            "" \
+            "Bu kanal hakkında:" \
+            "✨ Her gün yeni bir Pixar tarzı Türkçe çizgi film!" \
+            "🔔 Abone olun: Yeni bölümler otomatik olarak her gün yayınlanır." \
+            "" \
+            "#PixarTarzı #TürkçeÇizgiFilm #YapayZeka #AI #OtonomVideo #Çocuklar")
 
           python scripts/youtube_yukle.py \
             --video "$VIDEO_DOSYA" \
