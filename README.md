@@ -34,6 +34,7 @@ Karakterlerin tüm özellikleri (görsel tanım, ses dosyası yolu, TTS sesi)
 | Seslendirme | **edge-tts** (Microsoft) | Tamamen bedava | Anahtarsız, Türkçe sesler |
 | Ses klonlama (ops.) | **Coqui XTTS-v2** | Bedava (yerel) | Kendi ses örneğinizden klon |
 | Konuşan karakter | **SadTalker** | Bedava (yerel/Colab) | Görsel + ses → konuşan video |
+| Konuşan karakter (uzak) | **SadTalker HF Space** | Bedava (kota/kuyruk) | Yerel GPU'suz; `sadtalker_hf` motoru bir Hugging Face Space'i çağırır |
 | Dudak senkronu (alt.) | **Wav2Lip** | Bedava (yerel) | SadTalker alternatifi |
 | Arka plan görseli | **Pollinations.ai** | Bedava, anahtarsız | Yerel SD de olur |
 | Arka plan (stok) | **Pexels** foto/video | Bedava (API anahtarı) | `pexels_foto` (sabit) veya `pexels_video` (hareketli) arka plan |

@@ -22,6 +22,10 @@ Pillow                   # gorsel isleme
 moviepy                  # video birlestirme
 imageio-ffmpeg           # ffmpeg saglar
 
+# --- Animasyon (opsiyonel, uzak) ---
+# Yalnizca animasyon.motor: "sadtalker_hf" icin gerekli (Hugging Face Space):
+# gradio_client           # uzak SadTalker Space'ini cagirir
+
 # --- Altyazi ---
 faster-whisper           # sesten otomatik altyazi (yerel)
 

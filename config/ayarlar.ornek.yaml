@@ -40,12 +40,23 @@ sahne:
   # seed: 42                   # (opsiyonel) tekrarlanabilir sonuc icin
 
 animasyon:
-  # "basit"     : dudak senkronu YOK, gorsel+ses -> video (kurulum/GPU gerekmez,
-  #               garanti calisir; once uctan uca test icin bunu kullanin)
-  # "sadtalker" : dudak senkronlu konusan karakter (ayrica kurulum ister)
-  # "wav2lip"   : alternatif dudak senkronu
+  # "basit"        : dudak senkronu YOK, gorsel+ses -> video (kurulum/GPU gerekmez,
+  #                  garanti calisir; once uctan uca test icin bunu kullanin)
+  # "sadtalker"    : yerel SadTalker ile dudak senkronu (ayrica kurulum ister)
+  # "sadtalker_hf" : SadTalker'i UZAK bir Hugging Face Space uzerinden calistirir
+  #                  (yerel GPU/kurulum gerekmez; hata olursa "basit"e duser)
+  # "wav2lip"      : alternatif dudak senkronu
   motor: "basit"
   sadtalker_yolu: "./SadTalker"   # SadTalker kurulum klasoru (yerel/Colab)
+  # --- yalnizca motor: "sadtalker_hf" icin ---
+  hf_space: "kevinwang676/SadTalker"   # kullanilacak Gradio Space
+  hf_token: ""                          # ozel/ZeroGPU Space'ler icin HF token
+                                        # (bos ise HF_TOKEN ortam degiskeni denenir)
+  # hf_api_name: "/test"                # (ops.) belirli endpoint; bos ise otomatik secilir
+  # hf_params:                          # (ops.) endpoint'in ekstra parametreleri (ad -> deger)
+  #   preprocess: "full"
+  #   still_mode: true
+  #   use_enhancer: true
 
 montaj:
   cozunurluk: [1280, 720]
