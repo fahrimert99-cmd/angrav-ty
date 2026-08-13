@@ -97,6 +97,8 @@ cp config/ayarlar.ornek.yaml config/ayarlar.yaml
 1. **Tek seferlik:** Repo → **Settings → Secrets and variables → Actions → New
    repository secret** → Ad: `ANTHROPIC_API_KEY`, Değer: [Claude anahtarınız](https://console.anthropic.com).
    (`GEMINI_API_KEY` veya `GROQ_API_KEY` eklerseniz otomatik yedek olarak kullanılır.)
+   `PEXELS_API_KEY` ([ücretsiz](https://www.pexels.com/api/)) eklerseniz arka planlar
+   **hareketli Pexels stok videosundan** üretilir; eklemezseniz varsayılan Pollinations kalır.
 2. Repo → **Actions** sekmesi → soldan **“Video Uret”** → **Run workflow**.
 3. Konuyu/süreyi/karakterleri yaz → **Run workflow**.
 4. İş bitince aynı çalıştırma sayfasında **Artifacts → `cizgi-film-video`**'yu indir.
