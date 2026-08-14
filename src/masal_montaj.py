@@ -146,6 +146,57 @@ def _gecis_uygula(mp, klip, sure: float):
     return klip
 
 
+def _fade(clip, sure: float):
+    """Klibe fade-in + fade-out uygular (surumler arasi guvenli)."""
+    if sure <= 0:
+        return clip
+    try:
+        from moviepy import vfx
+        efektler = []
+        if hasattr(vfx, "FadeIn"):
+            efektler.append(vfx.FadeIn(sure))
+        if hasattr(vfx, "FadeOut"):
+            efektler.append(vfx.FadeOut(sure))
+        if efektler and hasattr(clip, "with_effects"):
+            return clip.with_effects(efektler)
+    except Exception:
+        pass
+    c = clip
+    for ad in ("fadein", "fadeout"):
+        m = getattr(c, ad, None)
+        if callable(m):
+            try:
+                c = m(sure)
+            except Exception:
+                pass
+    return c
+
+
+def _kart(mp, en, boy, sure, baslik, altbaslik, font, renk=(24, 20, 38)):
+    """Sakin, koyu zeminli bir baslik/kapanis karti (opsiyonel fade ile)."""
+    ogeler = [sure_ver(mp.ColorClip(size=(en, boy), color=renk), sure)]
+    if font and baslik:
+        try:
+            b = mp.TextClip(
+                text=baslik, font=font, font_size=max(40, en // 24),
+                color="white", method="caption",
+                size=(int(en * 0.82), None), text_align="center")
+            ogeler.append(konum_ver(sure_ver(b, sure), ("center", int(boy * 0.28))))
+        except Exception:
+            pass
+    if font and altbaslik:
+        try:
+            a = mp.TextClip(
+                text=altbaslik, font=font, font_size=max(26, en // 40),
+                color="white", method="caption",
+                size=(int(en * 0.7), None), text_align="center")
+            ogeler.append(konum_ver(sure_ver(a, sure), ("center", int(boy * 0.64))))
+        except Exception:
+            pass
+    kart = sure_ver(mp.CompositeVideoClip(ogeler, size=(en, boy)), sure)
+    return _fade(kart, min(1.0, sure / 3))
+
+
 def _tek_sahne(mp, gorsel: str, ses: str, en: int, boy: int, iceri: bool,
                srt: str = None, font: str = None, kuyruk: float = 0.6):
     """Bir sahnenin (gorsel + anlatim sesi + varsa altyazi) Ken Burns klibini
@@ -193,16 +244,36 @@ def birlestir(senaryo: dict, ayar: dict, cikti: Path) -> Path:
     if not klipler:
         raise ValueError("Masal montaji icin sahne bulunamadi")
 
-    # Gecis varsa negatif padding ile bindirerek birlestir (yumusak crossfade).
+    # Sahne govdesi: gecis varsa negatif padding ile bindirerek birlestir.
     try:
         if gecis > 0:
-            film = mp.concatenate_videoclips(klipler, method="compose",
-                                             padding=-gecis)
+            govde = mp.concatenate_videoclips(klipler, method="compose",
+                                              padding=-gecis)
         else:
-            film = mp.concatenate_videoclips(klipler, method="compose")
+            govde = mp.concatenate_videoclips(klipler, method="compose")
     except TypeError:
         # Eski surumde padding parametresi yoksa duz birlestir.
-        film = mp.concatenate_videoclips(klipler, method="compose")
+        govde = mp.concatenate_videoclips(klipler, method="compose")
+
+    # Acilis / kapanis kartlari (koyu zemin, fade). Kanal adi config'ten.
+    kart_font = font or _font_bul()   # altyazi kapali olsa da kartta yazi olsun
+    kanal = masal_ayar.get("kanal_adi", "Masalname")
+    baslik = senaryo.get("baslik", "Uyku Masali")
+    parcalar = []
+    if masal_ayar.get("intro", True):
+        parcalar.append(_kart(mp, en, boy, float(masal_ayar.get("intro_sn", 4)),
+                              baslik, "İyi geceler, tatlı rüyalar", kart_font))
+    parcalar.append(govde)
+    if masal_ayar.get("outro", True):
+        parcalar.append(_kart(mp, en, boy, float(masal_ayar.get("outro_sn", 5)),
+                              "İyi geceler", kanal, kart_font))
+
+    if len(parcalar) > 1:
+        film = mp.concatenate_videoclips(parcalar, method="compose")
+        kapatilacak += parcalar
+    else:
+        film = govde
+    kapatilacak.append(govde)
 
     # Istege bagli hafif fon muzigi (dusuk seviye, tum filme yayilir).
     muzik = ayar.get("masal", {}).get("fon_muzik") or ayar["montaj"].get("arka_plan_muzik")
