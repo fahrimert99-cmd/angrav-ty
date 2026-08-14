@@ -275,15 +275,27 @@ def birlestir(senaryo: dict, ayar: dict, cikti: Path) -> Path:
         film = govde
     kapatilacak.append(govde)
 
-    # Istege bagli hafif fon muzigi (dusuk seviye, tum filme yayilir).
-    muzik = ayar.get("masal", {}).get("fon_muzik") or ayar["montaj"].get("arka_plan_muzik")
-    if muzik and Path(muzik).exists():
-        try:
-            seviye = float(ayar.get("masal", {}).get("muzik_seviye", 0.08))
-            arka = sure_ver(ses_olcek(mp.AudioFileClip(muzik), seviye), film.duration)
-            film = ses_ver(film, mp.CompositeAudioClip([film.audio, arka]))
-        except Exception as e:
-            print(f"[masal muzik] eklenemedi ({e}), muziksiz devam.")
+    # Yumusak uyku muzigi (dusuk seviye, tum filme yayilir). Kullanici dosya
+    # vermediyse KENDIMIZ ureten uyku_muzik ile (telifsiz) doseriz; muzik: "yok"
+    # ile kapatilabilir.
+    muzik = masal_ayar.get("fon_muzik") or ayar["montaj"].get("arka_plan_muzik")
+    muzik_modu = masal_ayar.get("muzik", "auto")
+    seviye = float(masal_ayar.get("muzik_seviye", 0.12))
+    try:
+        yol = None
+        if muzik and Path(muzik).exists():
+            yol = muzik
+        elif muzik_modu != "yok":
+            from src import uyku_muzik
+            print("     [masal muzik] yumusak uyku muzigi uretiliyor...")
+            yol = str(uyku_muzik.uret(film.duration, Path(cikti) / "uyku_muzik.wav"))
+        if yol:
+            arka = sure_ver(ses_olcek(mp.AudioFileClip(yol), seviye), film.duration)
+            karisim = (mp.CompositeAudioClip([film.audio, arka])
+                       if film.audio is not None else arka)
+            film = ses_ver(film, karisim)
+    except Exception as e:
+        print(f"[masal muzik] eklenemedi ({e}), muziksiz devam.")
 
     hedef = Path(cikti) / "masal.mp4"
     film.write_videofile(str(hedef), fps=fps, codec="libx264", audio_codec="aac")
