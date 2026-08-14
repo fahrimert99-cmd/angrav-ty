@@ -76,6 +76,7 @@ masal:
   hiz: "-8%"                   # uyku temposu (yavas). Ornek: "-12%" daha yavas
   pitch: "+0Hz"
   gecis_sn: 0.8               # sahneler arasi yumusak crossfade suresi (sn)
+  altyazi: true               # anlatim metnini ekrana altyazi olarak bindir
   # fon_muzik: "sesler/ninni.mp3"  # (ops.) hafif fon muzigi (yoksa sadece anlatim)
   muzik_seviye: 0.08          # fon muzik seviyesi (0-1, dusuk tutun)
 

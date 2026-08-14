@@ -9,11 +9,86 @@ eklenir. Cikti: tek mp4.
 
 moviepy 1.x ve 2.x ile calisir (bkz. src/video_araci.py).
 """
+import re
 from pathlib import Path
 
 from src.video_araci import (
     moviepy_yukle, sure_ver, konum_ver, ses_ver, boyutlandir, ses_olcek, kirp,
 )
+
+# Altyazi icin tercih edilen fontlar (masalsi serif once; yoksa sans).
+_FONT_ADAYLARI = [
+    "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+]
+
+
+def _font_bul():
+    for f in _FONT_ADAYLARI:
+        if Path(f).exists():
+            return f
+    return None
+
+
+def _srt_ayrist(yol: str):
+    """Bir .srt dosyasindan (bas_sn, bit_sn, metin) uclulerini cikarir."""
+    try:
+        ham = Path(yol).read_text(encoding="utf-8")
+    except Exception:
+        return []
+
+    def _sn(z):
+        z = z.replace(",", ".")
+        s, d, sn = z.split(":")
+        return int(s) * 3600 + int(d) * 60 + float(sn)
+
+    cueler = []
+    for blok in re.split(r"\n\s*\n", ham.strip()):
+        satirlar = [s for s in blok.splitlines() if s.strip()]
+        if len(satirlar) < 2:
+            continue
+        zaman = next((s for s in satirlar if "-->" in s), None)
+        if not zaman:
+            continue
+        try:
+            bas_s, bit_s = [x.strip() for x in zaman.split("-->")]
+            bas, bit = _sn(bas_s), _sn(bit_s)
+        except Exception:
+            continue
+        metin = " ".join(satirlar[satirlar.index(zaman) + 1:]).strip()
+        if metin:
+            cueler.append((bas, bit, metin))
+    return cueler
+
+
+def _baslat(clip, t):
+    for ad in ("with_start", "set_start"):
+        m = getattr(clip, ad, None)
+        if callable(m):
+            return m(t)
+    return clip
+
+
+def _altyazi_klipleri(mp, srt_yol: str, en: int, boy: int, font: str):
+    """srt cue'lerinden alt-orta konumlu, zamanli TextClip listesi uretir.
+    Font yoksa veya TextClip desteklenmiyorsa bos liste doner (altyazisiz)."""
+    if not font:
+        return []
+    klipler = []
+    for bas, bit, metin in _srt_ayrist(srt_yol):
+        sure = max(0.3, bit - bas)
+        try:
+            tc = mp.TextClip(
+                text=metin, font=font, font_size=max(30, en // 32),
+                color="white", stroke_color="black", stroke_width=2,
+                method="caption", size=(int(en * 0.8), None), text_align="center")
+        except Exception:
+            return []  # bu surumde/duzenekte TextClip yok -> altyazisiz devam
+        tc = sure_ver(tc, sure)
+        tc = konum_ver(tc, ("center", int(boy * 0.80)))
+        tc = _baslat(tc, bas)
+        klipler.append(tc)
+    return klipler
 
 
 def _ken_burns(mp, gorsel: str, sure: float, en: int, boy: int,
@@ -72,12 +147,18 @@ def _gecis_uygula(mp, klip, sure: float):
 
 
 def _tek_sahne(mp, gorsel: str, ses: str, en: int, boy: int, iceri: bool,
-               kuyruk: float = 0.6):
-    """Bir sahnenin (gorsel + anlatim sesi) Ken Burns klibini kurar.
-    Sesin bitiminden sonra kisa bir 'kuyruk' eklenir ki gecis nefes alsin."""
+               srt: str = None, font: str = None, kuyruk: float = 0.6):
+    """Bir sahnenin (gorsel + anlatim sesi + varsa altyazi) Ken Burns klibini
+    kurar. Sesin bitiminden sonra kisa bir 'kuyruk' eklenir ki gecis nefes alsin."""
     ses_klip = mp.AudioFileClip(ses)
     sure = ses_klip.duration + kuyruk
     gorsel_klip = _ken_burns(mp, gorsel, sure, en, boy, iceri=iceri)
+
+    alt = _altyazi_klipleri(mp, srt, en, boy, font) if srt else []
+    if alt:
+        gorsel_klip = mp.CompositeVideoClip([gorsel_klip, *alt], size=(en, boy))
+        gorsel_klip = sure_ver(gorsel_klip, sure)
+
     return ses_ver(gorsel_klip, ses_klip), ses_klip
 
 
@@ -87,7 +168,10 @@ def birlestir(senaryo: dict, ayar: dict, cikti: Path) -> Path:
     mp = moviepy_yukle()
     en, boy = ayar["montaj"]["cozunurluk"]
     fps = ayar["montaj"].get("fps", 24)
-    gecis = float(ayar.get("masal", {}).get("gecis_sn", 0.8))
+    masal_ayar = ayar.get("masal", {})
+    gecis = float(masal_ayar.get("gecis_sn", 0.8))
+    altyazi_ac = masal_ayar.get("altyazi", True)
+    font = _font_bul() if altyazi_ac else None
 
     klipler, kapatilacak = [], []
     for i, sahne in enumerate(senaryo["sahneler"]):
@@ -98,7 +182,9 @@ def birlestir(senaryo: dict, ayar: dict, cikti: Path) -> Path:
         if not ses or not Path(ses).exists():
             raise FileNotFoundError(f"Sahne {i+1} sesi yok: {ses}")
 
-        klip, ses_klip = _tek_sahne(mp, gorsel, ses, en, boy, iceri=(i % 2 == 0))
+        klip, ses_klip = _tek_sahne(
+            mp, gorsel, ses, en, boy, iceri=(i % 2 == 0),
+            srt=sahne.get("srt_yolu"), font=font)
         if i > 0 and gecis > 0:
             klip = _gecis_uygula(mp, klip, gecis)
         klipler.append(klip)

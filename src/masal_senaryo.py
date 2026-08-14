@@ -55,15 +55,17 @@ def _ai_metin(istem: str, ayar: dict, deneme: int = 2) -> str | None:
 def _iskelet_uret(tema: str, n: int, ayar: dict) -> dict | None:
     istem = f"""Tema: {tema}
 Bu temadan {n} sahnelik bir UYKU MASALI plani cikar. Masal tek anlaticinin
-agzindan, sakin ve akici olsun; sonu huzurla/uykuyla bitsin.
+agzindan, sakin ve akici olsun; sonu huzurla/uykuyla bitsin. Masalin BASKARAKTERI
+belli olsun ve her sahnede ayni karakter gorunsun (gorsel tutarlilik icin).
 
 SADECE su JSON'u dondur (aciklama yok):
 {{
   "baslik": "kisa, sicak masal basligi",
+  "ana_karakter": "English, consistent visual description of the main character (species, color, one memorable accessory), e.g. 'a small fluffy red squirrel with a tiny green scarf'",
   "sahneler": [
     {{
       "ozet": "bu sahnede ne oluyor (1-2 cumle, Turkce)",
-      "arka_plan_prompt": "English, soft dreamy storybook illustration prompt for this scene, watercolor, warm pastel, cozy, night, no text"
+      "arka_plan_prompt": "English illustration prompt for THIS scene showing the main character; soft children's storybook watercolor, warm pastel, cozy, no text"
     }}
   ]
 }}
@@ -95,6 +97,10 @@ metnini dondur (baslik, numara, tirnak veya aciklama olmadan)."""
     return (ham or "").strip()
 
 
+# AI yoksa sablonda kullanilacak sabit ana karakter (gorsel tutarlilik icin).
+_SABLON_KARAKTER = "a small cute fluffy red squirrel with a tiny green scarf"
+
+
 def _sablon_masal(tema: str, n: int) -> dict:
     """AI yoksa: sakin, tekrar hissi vermeyen basit bir sablon masal."""
     sahneler = []
@@ -117,12 +123,14 @@ def _sablon_masal(tema: str, n: int) -> dict:
                        "nazikce gulumsermis. Huzur, yorganin altina sinen bir "
                        "sicaklik gibi yayilirmis dort bir yana.")
         sahneler.append({
-            "arka_plan_prompt": ("soft dreamy storybook illustration, watercolor, "
-                                 "warm pastel colors, cozy night scene, stars, "
-                                 "gentle moonlight, no text"),
+            "arka_plan_prompt": (
+                f"{_SABLON_KARAKTER}, soft children's storybook illustration, "
+                "watercolor, warm pastel colors, cozy night scene, stars, "
+                "gentle moonlight, no text"),
             "anlatim": anlatim,
         })
-    return {"baslik": f"Uyku Masali: {tema[:40]}", "sahneler": sahneler}
+    return {"baslik": f"Uyku Masali: {tema[:40]}",
+            "ana_karakter": _SABLON_KARAKTER, "sahneler": sahneler}
 
 
 def uret(tema: str, ayar: dict, hedef_sure_sn: int = 900) -> dict:
@@ -140,6 +148,7 @@ def uret(tema: str, ayar: dict, hedef_sure_sn: int = 900) -> dict:
         return _sablon_masal(tema, n)
 
     baslik = iskelet.get("baslik") or f"Uyku Masali: {tema[:40]}"
+    ana_karakter = (iskelet.get("ana_karakter") or "").strip()
     ham_sahneler = iskelet["sahneler"]
     toplam = len(ham_sahneler)
 
@@ -149,6 +158,9 @@ def uret(tema: str, ayar: dict, hedef_sure_sn: int = 900) -> dict:
         prompt = (hs.get("arka_plan_prompt")
                   or "soft dreamy storybook illustration, watercolor, warm pastel, "
                      "cozy night, stars, no text")
+        # Gorsel tutarlilik: ana karakter tarifini her sahne istemine ekle.
+        if ana_karakter and ana_karakter.lower() not in prompt.lower():
+            prompt = f"{ana_karakter}, {prompt}"
         anlatim = _sahne_genislet(tema, baslik, ozet, i, toplam, ayar, hedef_kelime)
         if not anlatim:
             # Bu sahne genisletilemedi: ozeti anlatim olarak kullan (bos birakma).
@@ -156,4 +168,4 @@ def uret(tema: str, ayar: dict, hedef_sure_sn: int = 900) -> dict:
                                "huzurluymus; herkes tatli ruyalara hazirlaniyormus.")
         sahneler.append({"arka_plan_prompt": prompt, "anlatim": anlatim})
 
-    return {"baslik": baslik, "sahneler": sahneler}
+    return {"baslik": baslik, "ana_karakter": ana_karakter, "sahneler": sahneler}

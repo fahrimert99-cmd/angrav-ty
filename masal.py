@@ -59,9 +59,11 @@ def _seslendir(senaryo: dict, ayar: dict, cikti: Path):
     ses_dizin.mkdir(parents=True, exist_ok=True)
     for i, sahne in enumerate(senaryo["sahneler"], start=1):
         mp3 = ses_dizin / f"{i:03d}.mp3"
-        _edge_seslendir(sahne["anlatim"], voice, rate, pitch,
-                        mp3, mp3.with_suffix(".srt"))
+        srt = mp3.with_suffix(".srt")
+        _edge_seslendir(sahne["anlatim"], voice, rate, pitch, mp3, srt)
         sahne["ses_yolu"] = str(mp3)
+        if srt.exists():
+            sahne["srt_yolu"] = str(srt)
     return senaryo
 
 
