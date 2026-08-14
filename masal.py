@@ -115,20 +115,58 @@ def _illustrasyonlar(senaryo: dict, ayar: dict, cikti: Path):
     return senaryo
 
 
+def _dis_senaryo_yukle(yol: str) -> dict:
+    """Disaridan (orn. Make/Gemini -> repository_dispatch) verilen masal JSON'unu
+    okur ve masal.py'nin bekledigi semaya normalize eder.
+
+    Kabul edilen alanlar (esnek): sahne anlatimi 'anlatim' veya 'metin';
+    illustrasyon istemi 'arka_plan_prompt' veya 'gorsel'. 'ana_karakter' varsa
+    gorsel tutarliligi icin her sahnenin istemine eklenir.
+    """
+    veri = json.loads(Path(yol).read_text(encoding="utf-8"))
+    ana = (veri.get("ana_karakter") or "").strip()
+    norm = []
+    for s in veri.get("sahneler") or []:
+        if not isinstance(s, dict):
+            continue
+        anlatim = (s.get("anlatim") or s.get("metin") or "").strip()
+        prompt = (s.get("arka_plan_prompt") or s.get("gorsel")
+                  or "soft storybook watercolor illustration, no text").strip()
+        if ana and ana.lower() not in prompt.lower():
+            prompt = f"{ana}, {prompt}"
+        if anlatim:
+            norm.append({"anlatim": anlatim, "arka_plan_prompt": prompt})
+    if not norm:
+        raise ValueError(f"Dis senaryo JSON'unda gecerli sahne yok: {yol}")
+    return {
+        "baslik": veri.get("baslik", "Uyku Masali"),
+        "ana_karakter": ana,
+        "sahneler": norm,
+    }
+
+
 def main():
     p = argparse.ArgumentParser(description="Uyku masali videosu uret (Masalname)")
     p.add_argument("--tema", default="", help="Masal temasi (bos ise rastgele)")
     p.add_argument("--sure", type=int, default=900,
                    help="Hedef sure (saniye - varsayilan 900 = 15dk)")
+    p.add_argument("--senaryo-json", default="",
+                   help="Hazir masal JSON dosyasi (verilirse AI ile uretim atlanir; "
+                        "orn. Make/Gemini -> repository_dispatch akisi)")
     p.add_argument("--yukle", action="store_true", help="Bitince YouTube'a yukle")
     args = p.parse_args()
 
     ayar = ayarlari_yukle()
-    tema = args.tema.strip() or random.choice(VARSAYILAN_TEMALAR)
-    print(f"Masal temasi: {tema}")
 
-    print("1/4  Masal yaziliyor (AI)...")
-    senaryo = m_senaryo.uret(tema, ayar, args.sure)
+    if args.senaryo_json.strip():
+        print(f"1/4  Hazir masal JSON'u kullaniliyor: {args.senaryo_json}")
+        senaryo = _dis_senaryo_yukle(args.senaryo_json.strip())
+        tema = args.tema.strip() or senaryo["baslik"]
+    else:
+        tema = args.tema.strip() or random.choice(VARSAYILAN_TEMALAR)
+        print(f"Masal temasi: {tema}")
+        print("1/4  Masal yaziliyor (AI)...")
+        senaryo = m_senaryo.uret(tema, ayar, args.sure)
     cikti = cikti_klasoru("masal-" + slugla(senaryo["baslik"]))
     (cikti / "masal_senaryo.json").write_text(
         json.dumps(senaryo, ensure_ascii=False, indent=2), encoding="utf-8")
