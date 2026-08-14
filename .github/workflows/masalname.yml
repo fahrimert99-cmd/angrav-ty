@@ -9,6 +9,10 @@ name: Masalname - Uyku Masali Videosu (15+ Dk)
 on:
   schedule:
     - cron: '0 17 * * 1,3,5'   # Pzt/Car/Cum 17:00 UTC (~20:00 TR)
+  # Make "Masal Beyni" senaryosu buraya dispatch atar (Gemini masal JSON'u
+  # base64 olarak client_payload.b64 icinde gelir).
+  repository_dispatch:
+    types: [masal]
   workflow_dispatch:
     inputs:
       tema:
@@ -77,6 +81,9 @@ jobs:
           fi
 
       - name: Parametreleri ayarla
+        env:
+          # repository_dispatch ise Make'ten gelen base64 masal JSON'u.
+          DISPATCH_B64: ${{ github.event.client_payload.b64 }}
         run: |
           TEMA="${{ github.event.inputs.tema }}"
           SURE="${{ github.event.inputs.sure }}"
@@ -85,6 +92,13 @@ jobs:
           echo "SURE=$SURE"   >> $GITHUB_ENV
           echo "TARIH=$(date +'%d.%m.%Y')" >> $GITHUB_ENV
 
+          # Make'ten (repository_dispatch) hazir masal JSON'u geldiyse coz.
+          if [ -n "$DISPATCH_B64" ]; then
+            echo "$DISPATCH_B64" | base64 -d > dispatch_masal.json
+            echo "SENARYO_JSON=dispatch_masal.json" >> $GITHUB_ENV
+            echo "Hazir masal JSON'u alindi (repository_dispatch)."
+          fi
+
       - name: Masal videosunu uret
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -92,7 +106,9 @@ jobs:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
         run: |
-          if [ -n "$TEMA" ]; then
+          if [ -n "$SENARYO_JSON" ]; then
+            python masal.py --senaryo-json "$SENARYO_JSON" --sure "$SURE"
+          elif [ -n "$TEMA" ]; then
             python masal.py --tema "$TEMA" --sure "$SURE"
           else
             python masal.py --sure "$SURE"
