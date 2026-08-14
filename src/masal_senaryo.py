@@ -102,34 +102,64 @@ metnini dondur (baslik, numara, tirnak veya aciklama olmadan)."""
 
 
 # AI yoksa sablonda kullanilacak sabit ana karakter (gorsel tutarlilik icin).
-_SABLON_KARAKTER = "a small cute fluffy red squirrel with a tiny green scarf"
+_SABLON_KARAKTER = "a small cute fluffy woodland animal with a tiny soft scarf"
+
+# Her sahne icin FARKLI bir ortam: (Turkce anlatim ortami, Ingilizce gorsel sahnesi).
+# Boylece ayni karakter ama HER SAHNEDE FARKLI gorsel olusur (tekrar yok).
+_SABLON_ORTAMLAR = [
+    ("ay isiginda usulca uzanan orman patikasinda",
+     "walking along a soft moonlit forest path"),
+    ("gumus gibi parlayan sakin bir derenin kenarinda",
+     "resting by a calm silver stream at night"),
+    ("yildizlarla dolu koca bir agacin altinda",
+     "sitting under a big old tree full of glowing stars"),
+    ("sicacik bir lambanin yandigi kucuk rahat bir evde",
+     "inside a cozy little cottage with a warm glowing lamp"),
+    ("alacakaranlikta sessiz bir cicek cayirinda",
+     "crossing a quiet flower meadow at dusk"),
+    ("yumusak cimenli bir tepede ayi seyrederken",
+     "on a soft grassy hill watching the round moon"),
+    ("pencereleri isil isil uykulu bir koyun yakininda",
+     "near a sleepy little village with glowing windows"),
+    ("yildizlari yansitan durgun bir golun kiyisinda",
+     "by a still lake reflecting the stars"),
+    ("yumusak yapraklarla dosenmis sicak bir yuvada",
+     "in a warm cozy burrow lined with soft leaves"),
+    ("gecenin bahcesinde nazik atesbocekleri arasinda",
+     "among gentle glowing fireflies in a night garden"),
+]
+
+_SABLON_KALIPLAR = [
+    "{yer} her sey daha da yumusarmis; hafif bir esinti tatli tatli fisildarmis.",
+    "{yer} yildizlar tek tek goz kirpar, gece usulca derinlesirmis.",
+    "{yer} dostluk ve sevgi dort bir yani sararmis, kimse acele etmezmis.",
+    "{yer} huzur, yorganin altina sinen bir sicaklik gibi yayilirmis.",
+    "{yer} ay nazikce gulumser, uyku yavasca yaklasirmis.",
+]
 
 
 def _sablon_masal(tema: str, n: int) -> dict:
-    """AI yoksa: sakin, tekrar hissi vermeyen basit bir sablon masal."""
+    """AI yoksa: her sahnesi FARKLI ortam/gorsel olan, tekrarsiz sablon masal."""
     sahneler = []
     for i in range(1, n + 1):
+        tr_yer, en_sahne = _SABLON_ORTAMLAR[(i - 1) % len(_SABLON_ORTAMLAR)]
         if i == 1:
             anlatim = (f"Bir varmis bir yokmus, uzak diyarlarin birinde {tema} "
                        "ile ilgili tatli bir masal baslarmis. Gece usulca iner, "
                        "yildizlar tek tek uyanirken herkes yumusacik yataklarina "
-                       "cekilirmis. Ruzgar bile fisildayarak esermis bu sakin aksamda.")
+                       "cekilirmis.")
         elif i == n:
             anlatim = ("Yavas yavas gozler agirlasir, nefesler derinlesirmis. "
                        "Butun dostlar birbirine iyi geceler dilemis, ay onlari "
-                       "usulca ortmus. Ve boylece herkes tatli ruyalara dalmis. "
-                       "Sen de gozlerini kapat, derin bir nefes al ve uykunun "
-                       "yumusak kucagina birak kendini. Iyi geceler.")
+                       "usulca ortmus. Sen de gozlerini kapat, derin bir nefes al "
+                       "ve uykunun yumusak kucagina birak kendini. Iyi geceler.")
         else:
-            anlatim = ("Gecenin sessizliginde her sey daha da yumusarmis. "
-                       f"{tema} etrafinda tatli seyler olur, dostluk ve sevgi "
-                       "her yani sararmis. Kimse acele etmez, herkes birbirine "
-                       "nazikce gulumsermis. Huzur, yorganin altina sinen bir "
-                       "sicaklik gibi yayilirmis dort bir yana.")
+            kalip = _SABLON_KALIPLAR[(i - 1) % len(_SABLON_KALIPLAR)]
+            anlatim = kalip.format(yer=tr_yer.capitalize())
         sahneler.append({
             "arka_plan_prompt": (
-                f"{_SABLON_KARAKTER}, soft children's storybook illustration, "
-                "watercolor, warm pastel colors, cozy night scene, stars, "
+                f"{_SABLON_KARAKTER}, {en_sahne}, soft children's storybook "
+                "watercolor illustration, warm pastel colors, cozy, stars, "
                 "gentle moonlight, no text"),
             "anlatim": anlatim,
         })
