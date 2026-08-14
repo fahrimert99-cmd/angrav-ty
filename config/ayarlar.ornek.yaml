@@ -68,6 +68,17 @@ montaj:
   fps: 24
   arka_plan_muzik: ""          # sesler/muzik.mp3 gibi (opsiyonel)
 
+# --- Masalname (uyku masali videosu; python masal.py) ---
+# Cizgi filmden bagimsizdir. Tek sakin anlatici + storybook illustrasyon +
+# tam ekran yavas Ken Burns akis. Gorseller AI (Pollinations) ile uretilir.
+masal:
+  ses: "tr-TR-EmelNeural"      # sakin kadin anlatici (erkek icin: tr-TR-AhmetNeural)
+  hiz: "-8%"                   # uyku temposu (yavas). Ornek: "-12%" daha yavas
+  pitch: "+0Hz"
+  gecis_sn: 0.8               # sahneler arasi yumusak crossfade suresi (sn)
+  # fon_muzik: "sesler/ninni.mp3"  # (ops.) hafif fon muzigi (yoksa sadece anlatim)
+  muzik_seviye: 0.08          # fon muzik seviyesi (0-1, dusuk tutun)
+
 altyazi:
   aktif: true
   model: "small"               # faster-whisper model boyutu: tiny/base/small/medium

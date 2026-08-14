@@ -50,6 +50,23 @@ ağır üretim Colab/yerel makinede çalışır.
 
 ---
 
+## 🌙 Masalname — Uyku Masalı Videosu (15+ dk)
+
+Çizgi film hattından ayrı, **uzun uyku masalı** videoları üretir (shorts değil).
+Tek sakin **anlatıcı** (edge-tts), masalın içeriğine uygun **storybook illüstrasyonları**
+(Pollinations AI) ve **tam ekran yavaş Ken Burns akışı** ile huzurlu bir video.
+
+```bash
+python masal.py --tema "yıldızları toplayan minik tavşan" --sure 900
+```
+
+- Tema boş bırakılırsa rastgele bir uyku teması seçilir.
+- Masal metni **AI** üretir (Claude/Gemini/Groq; anahtar yoksa güvenli şablon masal).
+- Görseller AI illüstrasyon (masal/suluboya tarzı); anlatıcı sesi ve tempo
+  `config/ayarlar.yaml`'daki `masal` bölümünden ayarlanır.
+- **GitHub Actions:** `Masalname` iş akışı **haftada 3** (Pzt/Çrş/Cum ~20:00 TR)
+  otomatik çalışır; manuel de tetiklenebilir. Çıktı `Artifacts → masalname-video`.
+
 ## 🗂️ Klasör Yapısı
 
 ```

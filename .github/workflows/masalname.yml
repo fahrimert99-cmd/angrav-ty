@@ -1,0 +1,127 @@
+name: Masalname - Uyku Masali Videosu (15+ Dk)
+
+# Uzun uyku masali videosu uretir (shorts DEGIL).
+# - Otomatik: Pazartesi/Carsamba/Cuma 17:00 UTC (~20:00 TR) - haftada 3.
+# - Manuel: Actions -> "Masalname" -> Run workflow.
+# - AI masal (Claude/Gemini/Groq) + edge-tts anlatici + Pollinations
+#   illustrasyon + tam ekran yavas Ken Burns akis.
+
+on:
+  schedule:
+    - cron: '0 17 * * 1,3,5'   # Pzt/Car/Cum 17:00 UTC (~20:00 TR)
+  workflow_dispatch:
+    inputs:
+      tema:
+        description: "Masal temasi (bos birakilirsa rastgele secilir)"
+        required: false
+        default: ""
+      sure:
+        description: "Hedef sure (saniye - varsayilan 900 = 15 dk)"
+        required: false
+        default: "900"
+      gizlilik:
+        description: "YouTube gizlilik (public / unlisted / private)"
+        required: false
+        default: "public"
+
+jobs:
+  masal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Depoyu al
+        uses: actions/checkout@v4
+
+      - name: Python kur
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: ffmpeg kur
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Python bagimliliklari
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install google-auth-oauthlib google-auth-httplib2 google-api-python-client
+
+      - name: Ayar dosyasini olustur
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          if [ -n "$ANTHROPIC_API_KEY" ]; then
+            SAGLAYICI=claude
+          elif [ -n "$GROQ_API_KEY" ]; then
+            SAGLAYICI=groq
+          elif [ -n "$GEMINI_API_KEY" ]; then
+            SAGLAYICI=gemini
+          else
+            SAGLAYICI=pollinations
+          fi
+          echo "Masal saglayici: $SAGLAYICI"
+          sed "s|^  saglayici:.*|  saglayici: \"$SAGLAYICI\"|" \
+            config/ayarlar.ornek.yaml > config/ayarlar.yaml
+
+      - name: Parametreleri ayarla
+        run: |
+          TEMA="${{ github.event.inputs.tema }}"
+          SURE="${{ github.event.inputs.sure }}"
+          [ -z "$SURE" ] && SURE="900"
+          echo "TEMA=$TEMA"   >> $GITHUB_ENV
+          echo "SURE=$SURE"   >> $GITHUB_ENV
+          echo "TARIH=$(date +'%d.%m.%Y')" >> $GITHUB_ENV
+
+      - name: Masal videosunu uret
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: |
+          if [ -n "$TEMA" ]; then
+            python masal.py --tema "$TEMA" --sure "$SURE"
+          else
+            python masal.py --sure "$SURE"
+          fi
+          VIDEO_DOSYA=$(find cikti -name "masal.mp4" 2>/dev/null | sort | tail -n1)
+          echo "VIDEO_DOSYA=$VIDEO_DOSYA" >> $GITHUB_ENV
+          echo "Uretilen masal videosu: $VIDEO_DOSYA"
+
+      - name: YouTube'a yukle
+        if: env.VIDEO_DOSYA != ''
+        env:
+          YOUTUBE_TOKEN_JSON: ${{ secrets.YOUTUBE_TOKEN_JSON }}
+          YOUTUBE_OAUTH_JSON: ${{ secrets.YOUTUBE_OAUTH_JSON }}
+        run: |
+          if [ -z "$YOUTUBE_OAUTH_JSON" ] || [ -z "$YOUTUBE_TOKEN_JSON" ]; then
+            echo "YouTube secret'lari yok, yukleme atlaniyor (video Artifacts'te)."
+            exit 0
+          fi
+          echo "$YOUTUBE_OAUTH_JSON" > client_secret.json
+          BASLIK="Uyku Masali | Cocuklar icin Masal | $TARIH"
+          ACIKLAMA=$(printf '%s\n' \
+            "Cocuklarin huzurla uykuya dalmasi icin sakin bir uyku masali." \
+            "" \
+            "Her hafta yeni masallar. Iyi geceler, tatli ruyalar." \
+            "" \
+            "#masal #uykumasali #cocukmasallari #uyku")
+          python scripts/youtube_yukle.py \
+            --video "$VIDEO_DOSYA" \
+            --baslik "$BASLIK" \
+            --aciklama "$ACIKLAMA" \
+            --etiketler "masal,uyku masali,cocuk masallari,uyku,ninni,Turkce" \
+            --gizlilik "${{ github.event.inputs.gizlilik || 'public' }}"
+
+      - name: Videoyu Artifact olarak yukle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: masalname-video
+          path: |
+            cikti/**/masal.mp4
+            cikti/**/masal_senaryo.json
+          if-no-files-found: warn
+          retention-days: 30
