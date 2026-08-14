@@ -52,6 +52,7 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
         run: |
           if [ -n "$ANTHROPIC_API_KEY" ]; then
             SAGLAYICI=claude
@@ -65,6 +66,15 @@ jobs:
           echo "Masal saglayici: $SAGLAYICI"
           sed "s|^  saglayici:.*|  saglayici: \"$SAGLAYICI\"|" \
             config/ayarlar.ornek.yaml > config/ayarlar.yaml
+
+          # ELEVENLABS_API_KEY secret'i varsa anlatici motorunu elevenlabs yap;
+          # yoksa varsayilan edge (bedava) kalir. Anahtar env'den okunur.
+          if [ -n "$ELEVENLABS_API_KEY" ]; then
+            echo "Anlatici motoru: elevenlabs (secret bulundu)"
+            sed -i 's|^  ses_motoru:.*|  ses_motoru: "elevenlabs"|' config/ayarlar.yaml
+          else
+            echo "Anlatici motoru: edge (ELEVENLABS_API_KEY yok)"
+          fi
 
       - name: Parametreleri ayarla
         run: |
@@ -80,6 +90,7 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
         run: |
           if [ -n "$TEMA" ]; then
             python masal.py --tema "$TEMA" --sure "$SURE"

@@ -53,14 +53,40 @@ def _anlatici_profili(ayar: dict):
 
 
 def _seslendir(senaryo: dict, ayar: dict, cikti: Path):
-    """Her sahnenin anlatimini edge-tts ile seslendirir; 'ses_yolu' ekler."""
+    """Her sahnenin anlatimini seslendirir; 'ses_yolu' (ve varsa 'srt_yolu') ekler.
+
+    Motor config'ten okunur: 'edge' (bedava, varsayilan) veya 'elevenlabs'
+    (daha dogal, ucretli anahtar gerekir). ElevenLabs secili ama anahtar yok
+    veya cagri hata/kota verirse o sahne icin sessizce edge-tts'e dusulur.
+    """
+    from src import eleven_ses
+
+    m = ayar.get("masal", {})
     voice, rate, pitch = _anlatici_profili(ayar)
+    motor = (m.get("ses_motoru") or "edge").lower()
+    eleven_key = eleven_ses.anahtar_al(ayar) if motor == "elevenlabs" else None
+    eleven_voice = m.get("eleven_voice_id", "")
+    eleven_model = m.get("eleven_model", "eleven_multilingual_v2")
+    if motor == "elevenlabs" and not eleven_key:
+        print("[masal ses] ElevenLabs secili ama anahtar yok "
+              "(eleven_api_key / ELEVENLABS_API_KEY); edge-tts kullanilacak.")
+
     ses_dizin = cikti / "ses"
     ses_dizin.mkdir(parents=True, exist_ok=True)
     for i, sahne in enumerate(senaryo["sahneler"], start=1):
         mp3 = ses_dizin / f"{i:03d}.mp3"
         srt = mp3.with_suffix(".srt")
-        _edge_seslendir(sahne["anlatim"], voice, rate, pitch, mp3, srt)
+        uretildi = False
+        if motor == "elevenlabs" and eleven_key and eleven_voice:
+            try:
+                eleven_ses.seslendir(sahne["anlatim"], eleven_voice, eleven_key,
+                                     mp3, srt, model=eleven_model)
+                uretildi = True
+            except Exception as e:
+                print(f"[masal ses] ElevenLabs sahne {i} basarisiz ({e}); "
+                      "edge-tts'e dusuluyor.")
+        if not uretildi:
+            _edge_seslendir(sahne["anlatim"], voice, rate, pitch, mp3, srt)
         sahne["ses_yolu"] = str(mp3)
         if srt.exists():
             sahne["srt_yolu"] = str(srt)
