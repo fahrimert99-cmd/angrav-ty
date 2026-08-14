@@ -46,13 +46,19 @@ def _sahne_sayisi(hedef_sure_sn: int, sahne_sn: int = _SAHNE_SN) -> int:
 
 def _ai_metin(istem: str, ayar: dict, deneme: int = 2) -> str | None:
     """Masal sistem talimatiyla ilk calisan saglayicidan ham metin dondurur;
-    hicbiri calismazsa None."""
+    hicbiri calismazsa None. Basarisiz saglayicinin HATASINI loglar ki neden
+    sablona dusuldugu gorunur (orn. Claude kredisiz, Gemini kotasi, vb.)."""
     for saglayici in _s._saglayici_sirasi(ayar):
+        son_hata = None
         for _ in range(max(1, deneme)):
             try:
                 return _s._ham_uret(saglayici, istem, ayar, sistem=MASAL_SISTEM)
-            except Exception:
+            except Exception as e:
+                son_hata = e
                 continue
+        if son_hata is not None:
+            print(f"     [masal AI] '{saglayici}' basarisiz: "
+                  f"{type(son_hata).__name__}: {son_hata}")
     return None
 
 
