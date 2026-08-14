@@ -80,17 +80,32 @@ def _srt_uret(metin: str, alignment: dict, max_kelime: int = 8) -> str:
 
 def seslendir(metin: str, voice_id: str, api_key: str, mp3_hedef: Path,
               srt_hedef: Path, model: str = "eleven_multilingual_v2",
+              voice_settings: dict = None, language_code: str = None,
               deneme: int = 3) -> None:
     """ElevenLabs ile mp3 + .srt uretir. Basarisizsa RuntimeError firlatir
-    (cagiran taraf edge-tts'e duser)."""
+    (cagiran taraf edge-tts'e duser).
+
+    voice_settings: stability/similarity_boost/style/use_speaker_boost/speed.
+      Masal anlatimi icin dusuk stability + biraz style + yavas hiz onerilir.
+    language_code: bazi modeller (turbo/flash v2.5) telaffuzu zorlamak icin
+      "tr" kabul eder; multilingual_v2 gormezden gelir (sorun cikarmaz).
+    """
     url = (f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
            "/with-timestamps")
     basliklar = {"xi-api-key": api_key, "Content-Type": "application/json"}
-    govde = {
-        "text": metin,
-        "model_id": model,
-        "voice_settings": {"stability": 0.5, "similarity_boost": 0.8},
+    # Masalsi, sicak anlatim icin varsayilanlar (config'ten gecersiz kilinabilir).
+    ayarlar = {
+        "stability": 0.40,        # dusuk -> daha ifadeli/vurgulu anlatim
+        "similarity_boost": 0.85,
+        "style": 0.35,            # masal anlatimi tonu
+        "use_speaker_boost": True,
+        "speed": 0.92,            # uyku temposu: hafif yavas
     }
+    if voice_settings:
+        ayarlar.update({k: v for k, v in voice_settings.items() if v is not None})
+    govde = {"text": metin, "model_id": model, "voice_settings": ayarlar}
+    if language_code:
+        govde["language_code"] = language_code
 
     son_hata = None
     for i in range(max(1, deneme)):
