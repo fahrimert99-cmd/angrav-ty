@@ -33,11 +33,15 @@ Istenen cikti bicimine harfiyen uy; markdown veya ``` kullanma."""
 
 # Yaklasik: yavaslatilmis anlatici ~2.4 kelime/sn. 15 dk ~ 2160 kelime.
 _KELIME_SN = 2.4
+# Her sahne KISA olsun ki gorsel sik degissin ve anlatimla senkron dursun.
+# (Referans videodaki gibi ~her 20 sn'de yeni gorsel.) config'ten degistirilebilir.
+_SAHNE_SN = 20
+_MAKS_SAHNE = 50
 
 
-def _sahne_sayisi(hedef_sure_sn: int) -> int:
-    """Hedef sureye gore makul sahne sayisi (~55 sn/sahne)."""
-    return max(6, round(hedef_sure_sn / 55))
+def _sahne_sayisi(hedef_sure_sn: int, sahne_sn: int = _SAHNE_SN) -> int:
+    """Hedef sureye gore sahne sayisi. Kisa sahneler -> sik gorsel degisimi."""
+    return max(6, min(_MAKS_SAHNE, round(hedef_sure_sn / max(8, sahne_sn))))
 
 
 def _ai_metin(istem: str, ayar: dict, deneme: int = 2) -> str | None:
@@ -138,9 +142,10 @@ def uret(tema: str, ayar: dict, hedef_sure_sn: int = 900) -> dict:
 
     Donen sozlukteki her sahne: {'arka_plan_prompt', 'anlatim'}.
     """
-    n = _sahne_sayisi(hedef_sure_sn)
-    # Sahne basina hedef kelime (yavas anlatici + sahneler arasi molalar payi).
-    hedef_kelime = max(90, int((hedef_sure_sn * _KELIME_SN) / n))
+    sahne_sn = int((ayar.get("masal", {}) or {}).get("sahne_sn", _SAHNE_SN))
+    n = _sahne_sayisi(hedef_sure_sn, sahne_sn)
+    # Sahne basina hedef kelime (kisa sahne -> sik gorsel degisimi/senkron his).
+    hedef_kelime = max(30, int((hedef_sure_sn * _KELIME_SN) / n))
 
     iskelet = _iskelet_uret(tema, n, ayar)
     if not iskelet:
