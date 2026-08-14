@@ -78,9 +78,20 @@ masal:
   hiz: "-8%"                   # edge tempo (yavas). Ornek: "-12%" daha yavas
   pitch: "+0Hz"
   # --- ElevenLabs (yalnizca ses_motoru: "elevenlabs" icin) ---
-  eleven_voice_id: "AtCqglsS9sXaXLbu0Zco"   # kullanilacak ses kimligi
-  eleven_model: "eleven_multilingual_v2"     # Turkce destekli model
+  # ONEMLI: AKSAN sesin KENDISINDEN gelir. Turkce/dogal tinlamasi icin
+  # ElevenLabs Voice Library'den TURKCE bir ses secip ID'sini buraya yazin.
+  # (Ingilizce bir ses Turkce okursa yabanci aksanli/kotu olur.)
+  eleven_voice_id: "AtCqglsS9sXaXLbu0Zco"   # <-- TURKCE bir ses ID'si ile degistirin
+  eleven_model: "eleven_multilingual_v2"     # Turkce destekli, ifadeli model
+  # eleven_dil: "tr"          # (ops.) yalnizca turbo/flash v2.5 modelleri telaffuzu zorlar
   # eleven_api_key: ""        # veya ELEVENLABS_API_KEY ortam degiskeni (secret)
+  # Masal anlatimi tonu (bos birakilirsa asagidaki masalsi varsayilanlar kullanilir):
+  # eleven_ayar:
+  #   stability: 0.40         # dusuk -> daha ifadeli/vurgulu (masal gibi)
+  #   similarity_boost: 0.85
+  #   style: 0.35             # anlatim tonu
+  #   use_speaker_boost: true
+  #   speed: 0.92             # uyku temposu (hafif yavas)
   # NOT: ElevenLabs ucretlidir/kotalidir; anahtar yoksa veya kota biterse
   # otomatik edge-tts'e dusulur (uretim durmaz).
   gecis_sn: 0.8               # sahneler arasi yumusak crossfade suresi (sn)

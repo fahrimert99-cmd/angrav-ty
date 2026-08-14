@@ -67,6 +67,8 @@ def _seslendir(senaryo: dict, ayar: dict, cikti: Path):
     eleven_key = eleven_ses.anahtar_al(ayar) if motor == "elevenlabs" else None
     eleven_voice = m.get("eleven_voice_id", "")
     eleven_model = m.get("eleven_model", "eleven_multilingual_v2")
+    eleven_ayar = m.get("eleven_ayar")            # (ops.) voice_settings gecersiz kil
+    eleven_dil = m.get("eleven_dil")              # (ops.) "tr" (turbo/flash modelleri)
     if motor == "elevenlabs" and not eleven_key:
         print("[masal ses] ElevenLabs secili ama anahtar yok "
               "(eleven_api_key / ELEVENLABS_API_KEY); edge-tts kullanilacak.")
@@ -80,7 +82,9 @@ def _seslendir(senaryo: dict, ayar: dict, cikti: Path):
         if motor == "elevenlabs" and eleven_key and eleven_voice:
             try:
                 eleven_ses.seslendir(sahne["anlatim"], eleven_voice, eleven_key,
-                                     mp3, srt, model=eleven_model)
+                                     mp3, srt, model=eleven_model,
+                                     voice_settings=eleven_ayar,
+                                     language_code=eleven_dil)
                 uretildi = True
             except Exception as e:
                 print(f"[masal ses] ElevenLabs sahne {i} basarisiz ({e}); "
