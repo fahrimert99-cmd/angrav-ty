@@ -33,14 +33,11 @@ def uret(sure: float, hedef: Path, sr: int = 44100) -> Path:
     # Cok hafif, yavas bir "dalga" (genel svel) ekle.
     sig *= 0.75 + 0.25 * np.sin(2 * math.pi * 0.012 * t)
 
-    # Bas/gurultuyu yumusatmak icin basit tek-kutuplu alcak geciren filtre.
-    a = 0.02
-    yum = np.empty_like(sig)
-    onceki = 0.0
-    for k in range(n):
-        onceki += a * (sig[k] - onceki)
-        yum[k] = onceki
-    sig = yum
+    # Bas/gurultuyu yumusatmak icin kisa bir hareketli-ortalama (vektorel;
+    # eski saf-Python dongusu cok yavasti ve uzun videoda tikaniyordu).
+    pencere = max(1, int(sr * 0.004))   # ~4 ms
+    cekirdek = np.ones(pencere) / pencere
+    sig = np.convolve(sig, cekirdek, mode="same")
 
     # Basta/sonda 3 sn fade.
     fade = min(int(sr * 3), n // 2)

@@ -218,8 +218,9 @@ def birlestir(senaryo: dict, ayar: dict, cikti: Path) -> Path:
     tek bir masal mp4'u uretir."""
     mp = moviepy_yukle()
     en, boy = ayar["montaj"]["cozunurluk"]
-    fps = ayar["montaj"].get("fps", 24)
     masal_ayar = ayar.get("masal", {})
+    # Masal icin dusuk fps cok daha hizli render eder (yavas akista fark yok).
+    fps = int(masal_ayar.get("fps") or ayar["montaj"].get("fps", 24))
     gecis = float(masal_ayar.get("gecis_sn", 0.8))
     altyazi_ac = masal_ayar.get("altyazi", True)
     font = _font_bul() if altyazi_ac else None
