@@ -161,8 +161,14 @@ def _saglayici_sirasi(ayar: dict) -> list:
     return sira
 
 
-def _ham_uret(saglayici: str, istem: str, ayar: dict) -> str:
-    """Secilen saglayicidan ham metin yanitini alir (JSON string beklenir)."""
+def _ham_uret(saglayici: str, istem: str, ayar: dict,
+              sistem: str = SISTEM_TALIMATI) -> str:
+    """Secilen saglayicidan ham metin yanitini alir.
+
+    `sistem` sistem talimatidir; varsayilan cizgi film senaryosu icindir ama
+    masal gibi baska iceriklerde farkli bir talimat gecmek icin disaridan
+    verilebilir.
+    """
     if saglayici == "claude":
         import anthropic
 
@@ -183,7 +189,7 @@ def _ham_uret(saglayici: str, istem: str, ayar: dict) -> str:
             yanit = istemci.messages.create(
                 model=model,
                 max_tokens=4096,
-                system=SISTEM_TALIMATI,
+                system=sistem,
                 messages=[{"role": "user", "content": istem}],
             )
         except anthropic.RateLimitError as e:
@@ -222,7 +228,7 @@ def _ham_uret(saglayici: str, istem: str, ayar: dict) -> str:
         for ad in adaylar:
             try:
                 model = genai.GenerativeModel(
-                    ad, system_instruction=SISTEM_TALIMATI)
+                    ad, system_instruction=sistem)
                 return model.generate_content(istem).text
             except NotFound as e:  # model yok/emekli -> sonraki adayi dene
                 son_hata = e
@@ -232,7 +238,7 @@ def _ham_uret(saglayici: str, istem: str, ayar: dict) -> str:
                 time.sleep(12)
                 try:
                     model = genai.GenerativeModel(
-                        ad, system_instruction=SISTEM_TALIMATI)
+                        ad, system_instruction=sistem)
                     return model.generate_content(istem).text
                 except ResourceExhausted as e2:
                     raise KotaAsimi("Gemini kota/hiz limiti asildi (429).") from e2
@@ -251,7 +257,7 @@ def _ham_uret(saglayici: str, istem: str, ayar: dict) -> str:
             yanit = istemci.chat.completions.create(
                 model="llama-3.3-70b-versatile",
                 messages=[
-                    {"role": "system", "content": SISTEM_TALIMATI},
+                    {"role": "system", "content": sistem},
                     {"role": "user", "content": istem},
                 ],
             )
@@ -267,7 +273,7 @@ def _ham_uret(saglayici: str, istem: str, ayar: dict) -> str:
             "https://text.pollinations.ai/",
             json={
                 "messages": [
-                    {"role": "system", "content": SISTEM_TALIMATI},
+                    {"role": "system", "content": sistem},
                     {"role": "user", "content": istem}
                 ],
                 "model": "openai"
