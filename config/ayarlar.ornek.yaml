@@ -96,9 +96,10 @@ masal:
   # otomatik edge-tts'e dusulur (uretim durmaz).
   gecis_sn: 0.8               # sahneler arasi yumusak crossfade suresi (sn)
   altyazi: true               # anlatim metnini ekrana altyazi olarak bindir
-  sahne_sn: 20                # her sahne ~kac sn (kisa -> gorsel sik degisir, senkron)
+  sahne_sn: 35                # her sahne ~kac sn (buyuk -> gorsel yavas degisir, sakin)
+  fps: 15                     # masal videosu kare/sn (dusuk -> cok daha hizli render)
   muzik: "auto"               # "auto" (kendi urettigimiz uyku muzigi) | "yok"
-  muzik_seviye: 0.12          # fon muzik seviyesi (0-1, dusuk tutun)
+  muzik_seviye: 0.18          # fon muzik seviyesi (0-1). Duyulmuyorsa artir
   intro: true                 # acilis karti (masal basligi) goster
   outro: true                 # kapanis karti ("Iyi geceler" + kanal adi) goster
   kanal_adi: "Masalname"      # kapanis kartinda gorunecek kanal adi
