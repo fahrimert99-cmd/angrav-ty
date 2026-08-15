@@ -163,12 +163,30 @@ def main():
     p.add_argument("--gorseller", default="",
                    help="--docx ile birlikte: bolum gorsellerinin klasoru "
                         "(1.jpg, 2.jpg ... bolum sirasina gore).")
+    p.add_argument("--klasor", default="",
+                   help="Masal klasoru (orn. masallar/kayip-zamanin-aynasi). "
+                        "Icindeki belge + gorseller kullanilir. 'auto' verilirse "
+                        "masallar/ altindaki ilk masal secilir.")
     p.add_argument("--yukle", action="store_true", help="Bitince YouTube'a yukle")
     args = p.parse_args()
 
     ayar = ayarlari_yukle()
 
-    if args.docx.strip():
+    if args.klasor.strip():
+        from src import masal_docx
+        secilen = args.klasor.strip()
+        if secilen.lower() in ("auto", "otomatik"):
+            adaylar = masal_docx.masal_klasorlerini_bul("masallar")
+            if not adaylar:
+                raise SystemExit("masallar/ altinda masal klasoru bulunamadi. "
+                                 "Bkz. masallar/README.md")
+            secilen = str(adaylar[0])
+            print(f"     Otomatik secilen masal: {secilen}")
+        print(f"1/4  Masal klasoru kullaniliyor: {secilen}")
+        senaryo = masal_docx.klasordan_yukle(secilen)
+        tema = args.tema.strip() or senaryo["baslik"]
+        print(f"     {len(senaryo['sahneler'])} sahne (belgeden)")
+    elif args.docx.strip():
         from src import masal_docx
         print(f"1/4  Hazir masal belgesi kullaniliyor: {args.docx}")
         senaryo = masal_docx.yukle(args.docx.strip(),

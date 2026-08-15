@@ -29,8 +29,47 @@ _GORSEL_BOLUM = re.compile(r"g[oö]rsel tasar[iı]m[iı]", re.IGNORECASE)
 _BOLUM_BAS = re.compile(r"^b[oö]l[uü]m\s*\d+\s*[:.]", re.IGNORECASE)
 
 
+def _duz_metin_paragraflari(yol: Path):
+    """.md / .txt dosyasindan paragraflari dondurur.
+
+    Markdown basliklari (#, ##) ve liste isaretleri temizlenir; bos satirla
+    ayrilmis bloklar paragraf sayilir (tek satirlik basliklar da paragraf olur).
+    """
+    ham = Path(yol).read_text(encoding="utf-8")
+    out = []
+    for blok in re.split(r"\n\s*\n", ham):
+        satirlar = []
+        for s in blok.splitlines():
+            s = re.sub(r"^\s{0,3}#{1,6}\s*", "", s)        # md baslik
+            s = re.sub(r"^\s*[-*+]\s+", "", s)             # liste isareti
+            s = re.sub(r"\*\*(.*?)\*\*", r"\1", s)         # kalin
+            s = s.strip()
+            if s:
+                satirlar.append(s)
+        if not satirlar:
+            continue
+        # Basliklar (Bolum N: ... / Gorsel Tasarimi ...) kendi baslarina paragraf
+        # olur; ardisik duz satirlar tek bir anlatim paragrafinda birlestirilir.
+        tampon = []
+        for s in satirlar:
+            if _BOLUM_BAS.match(s) or _GORSEL_BOLUM.search(s):
+                if tampon:
+                    out.append(" ".join(tampon))
+                    tampon = []
+                out.append(s)
+            else:
+                tampon.append(s)
+        if tampon:
+            out.append(" ".join(tampon))
+    return out
+
+
 def _paragraflar(docx_yolu: str):
-    """docx icindeki paragraflari (metin) sirayla dondurur."""
+    """Belgedeki paragraflari (metin) sirayla dondurur (.docx / .md / .txt)."""
+    yol = Path(docx_yolu)
+    if yol.suffix.lower() in (".md", ".txt", ".markdown"):
+        return _duz_metin_paragraflari(yol)
+
     with zipfile.ZipFile(docx_yolu) as z:
         xml = z.read("word/document.xml").decode("utf-8", "ignore")
     paras = re.findall(r"<w:p\b[^>]*>.*?</w:p>", xml, re.DOTALL)
@@ -120,3 +159,54 @@ def yukle(docx_yolu: str, gorsel_klasoru: str = None,
             sahneler.append(sahne)
 
     return {"baslik": baslik, "ana_karakter": "", "sahneler": sahneler}
+
+
+# --- Klasor tabanli kullanim (repo icindeki masallar/<masal-adi>/) -----------
+
+BELGE_UZANTILARI = (".docx", ".md", ".markdown", ".txt")
+
+
+def klasordeki_belge(klasor: Path):
+    """Klasordeki masal belgesini bulur (.docx > .md > .txt onceligiyle)."""
+    klasor = Path(klasor)
+    for uzanti in BELGE_UZANTILARI:
+        adaylar = sorted(p for p in klasor.iterdir()
+                         if p.suffix.lower() == uzanti and not p.name.startswith("~$"))
+        if adaylar:
+            return adaylar[0]
+    return None
+
+
+def klasordan_yukle(klasor: str) -> dict:
+    """Bir masal klasorunden (belge + gorseller) senaryo uretir.
+
+    Beklenen yapi:
+        masallar/<masal-adi>/
+            masal.docx (veya .md / .txt)
+            1.jpg, 2.jpg, ...        <- bolum sirasina gore gorseller
+    """
+    klasor = Path(klasor)
+    if not klasor.is_dir():
+        raise NotADirectoryError(f"Masal klasoru yok: {klasor}")
+    belge = klasordeki_belge(klasor)
+    if belge is None:
+        raise FileNotFoundError(
+            f"{klasor} icinde masal belgesi yok "
+            f"({', '.join(BELGE_UZANTILARI)} bekleniyor).")
+    return yukle(str(belge), str(klasor))
+
+
+def masal_klasorlerini_bul(kok: str = "masallar"):
+    """Icinde belge bulunan masal klasorlerini (alfabetik) dondurur.
+
+    Adi '_' veya '.' ile baslayan klasorler atlanir (yayinlanmis/pasif masallari
+    siradan cikarmak icin).
+    """
+    kok = Path(kok)
+    if not kok.is_dir():
+        return []
+    return sorted((p for p in kok.iterdir()
+                   if p.is_dir()
+                   and not p.name.startswith(("_", "."))
+                   and klasordeki_belge(p) is not None),
+                  key=lambda p: p.name.lower())
