@@ -57,8 +57,15 @@ Tek sakin **anlatıcı** (edge-tts), masalın içeriğine uygun **storybook ill�
 (Pollinations AI) ve **tam ekran yavaş Ken Burns akışı** ile huzurlu bir video.
 
 ```bash
-python masal.py --tema "yıldızları toplayan minik tavşan" --sure 900
+python masal.py --klasor masallar/kayip-zamanin-aynasi   # kendi senaryonuzdan (önerilen)
+python masal.py --tema "yıldızları toplayan minik tavşan" --sure 900   # AI ile üret
 ```
+
+### 📚 Kendi senaryonuzdan video (önerilen)
+`masallar/` altına her masal için bir klasör açın: içine **senaryo metni**
+(`.md`, `.txt` veya `.docx`) ve **bölüm görselleri** (`1.jpg`, `2.jpg` …) koyun.
+Sistem metni bölümlere ayırır, her bölümü kendi görseliyle eşleştirir ve videoyu
+üretir. Ayrıntı: [`masallar/README.md`](masallar/README.md).
 
 - Tema boş bırakılırsa rastgele bir uyku teması seçilir.
 - Masal metni **AI** üretir (Claude/Gemini/Groq; anahtar yoksa güvenli şablon masal).

@@ -15,8 +15,12 @@ on:
     types: [masal]
   workflow_dispatch:
     inputs:
+      masal_klasoru:
+        description: "masallar/ altindaki masal klasoru (orn. kayip-zamanin-aynasi). 'auto' = ilk masal. Bos = AI ile uret"
+        required: false
+        default: "auto"
       tema:
-        description: "Masal temasi (bos birakilirsa rastgele secilir)"
+        description: "Masal temasi (yalnizca masal_klasoru bos ise; bos birakilirsa rastgele)"
         required: false
         default: ""
       sure:
@@ -87,7 +91,24 @@ jobs:
         run: |
           TEMA="${{ github.event.inputs.tema }}"
           SURE="${{ github.event.inputs.sure }}"
+          KLASOR="${{ github.event.inputs.masal_klasoru }}"
           [ -z "$SURE" ] && SURE="900"
+          # Zamanlanmis (schedule) calismada girdi gelmez: masallar/ varsa
+          # oradan otomatik sec, yoksa AI ile uret.
+          if [ -z "$KLASOR" ] && [ "${{ github.event_name }}" = "schedule" ]; then
+            KLASOR="auto"
+          fi
+          # Sadece klasor adi verildiyse basina masallar/ ekle.
+          if [ -n "$KLASOR" ] && [ "$KLASOR" != "auto" ] && [ ! -d "$KLASOR" ]; then
+            [ -d "masallar/$KLASOR" ] && KLASOR="masallar/$KLASOR"
+          fi
+          # 'auto' ama masallar/ bos ise AI moduna dus.
+          if [ "$KLASOR" = "auto" ] && [ -z "$(ls -A masallar 2>/dev/null | grep -v README)" ]; then
+            echo "masallar/ bos -> AI ile uretilecek."
+            KLASOR=""
+          fi
+          echo "Masal klasoru: ${KLASOR:-<yok, AI modu>}"
+          echo "KLASOR=$KLASOR" >> $GITHUB_ENV
           echo "TEMA=$TEMA"   >> $GITHUB_ENV
           echo "SURE=$SURE"   >> $GITHUB_ENV
           echo "TARIH=$(date +'%d.%m.%Y')" >> $GITHUB_ENV
@@ -106,7 +127,9 @@ jobs:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
         run: |
-          if [ -n "$SENARYO_JSON" ]; then
+          if [ -n "$KLASOR" ]; then
+            python masal.py --klasor "$KLASOR" --sure "$SURE"
+          elif [ -n "$SENARYO_JSON" ]; then
             python masal.py --senaryo-json "$SENARYO_JSON" --sure "$SURE"
           elif [ -n "$TEMA" ]; then
             python masal.py --tema "$TEMA" --sure "$SURE"
