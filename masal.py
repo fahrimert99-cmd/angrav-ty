@@ -109,6 +109,10 @@ def _illustrasyonlar(senaryo: dict, ayar: dict, cikti: Path):
     en, boy = ayar["montaj"]["cozunurluk"]
     ayar["sahne"]["cozunurluk"] = f"{en}x{boy}"
     for i, sahne in enumerate(senaryo["sahneler"], start=1):
+        # Sahnenin HAZIR gorseli varsa (orn. --docx ile gelen) yeniden uretme.
+        mevcut = sahne.get("arka_plan_yolu")
+        if mevcut and Path(mevcut).exists():
+            continue
         hedef = cikti / "sahne" / f"sahne_{i:02d}.jpg"
         sahne["arka_plan_yolu"] = str(
             m_sahne.arka_plan_uret(sahne["arka_plan_prompt"], ayar, hedef))
@@ -153,12 +157,25 @@ def main():
     p.add_argument("--senaryo-json", default="",
                    help="Hazir masal JSON dosyasi (verilirse AI ile uretim atlanir; "
                         "orn. Make/Gemini -> repository_dispatch akisi)")
+    p.add_argument("--docx", default="",
+                   help="Hazir masal belgesi (.docx). Bolum metinleri okunur; "
+                        "AI ile masal uretimi atlanir.")
+    p.add_argument("--gorseller", default="",
+                   help="--docx ile birlikte: bolum gorsellerinin klasoru "
+                        "(1.jpg, 2.jpg ... bolum sirasina gore).")
     p.add_argument("--yukle", action="store_true", help="Bitince YouTube'a yukle")
     args = p.parse_args()
 
     ayar = ayarlari_yukle()
 
-    if args.senaryo_json.strip():
+    if args.docx.strip():
+        from src import masal_docx
+        print(f"1/4  Hazir masal belgesi kullaniliyor: {args.docx}")
+        senaryo = masal_docx.yukle(args.docx.strip(),
+                                   args.gorseller.strip() or None)
+        tema = args.tema.strip() or senaryo["baslik"]
+        print(f"     {len(senaryo['sahneler'])} sahne (belgeden)")
+    elif args.senaryo_json.strip():
         print(f"1/4  Hazir masal JSON'u kullaniliyor: {args.senaryo_json}")
         senaryo = _dis_senaryo_yukle(args.senaryo_json.strip())
         tema = args.tema.strip() or senaryo["baslik"]
