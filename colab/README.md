@@ -43,7 +43,7 @@ GPU'sunu** kullanın.
 ```
 
 `sesler/<slug>.wav` altına 10-30 saniyelik net, tek kişilik bir ses örneği
-koyun (örn. `sesler/kaan.wav` — depoda hazır), ilgili karakterin
+koyun (depoda hazır örnek gelmez; kendi kaydınızı ekleyin), ilgili karakterin
 `config/karakterler.json` içindeki `"ses"` alanının bu dosyayı gösterdiğinden
 emin olun, ve `config/ayarlar.yaml` içinde `seslendirme.motor: "xtts"` yapın.
 Bu motor **tüm** karakterler için geçerli olur — klonlanmamış diğer
