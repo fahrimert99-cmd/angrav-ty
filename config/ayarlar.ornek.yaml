@@ -107,6 +107,27 @@ masal:
   # outro_sn: 5               # (ops.) kapanis karti suresi
   # fon_muzik: "sesler/ninni.mp3"  # (ops.) kendi muzik dosyaniz (verilmezse auto uretilir)
 
+# --- ASMR (uzun rahatlama/uyku videosu; python asmr.py) ---
+# Cizgi film/masaldan bagimsizdir. Telifsiz, kodla uretilen ambient ses ortami
+# (yagmur/okyanus/ates/gece/ruzgar/gurultu) + sakinlestirici gorseller uzerinde
+# yavas Ken Burns akis. Ses ve gorsel tamamen bedava/anahtarsiz uretilir.
+asmr:
+  tip: "yagmur"               # ambient ses tipi: yagmur | okyanus | ates | gece | ruzgar | beyaz | pembe | kahve
+  gorsel_sayisi: 4            # kac farkli gorsel uretilsin (dongude sirayla akar)
+  sahne_sn: 40               # her gorsel ~kac sn ekranda kalir (buyuk -> daha sakin)
+  gecis_sn: 2.0              # gorseller arasi yumusak crossfade suresi (sn)
+  fps: 12                    # dusuk fps -> cok daha hizli render (yavas akista fark yok)
+  hareket: "yavas"           # "yavas" (Ken Burns zoom) | "sabit" (hareketsiz, en hizli render)
+  loop_sure: 120             # ambient ses loop uzunlugu (sn); dosyaya tekrar yazilir
+  ambient_seviye: 0.85       # ambient ses seviyesi (anlatim varken kismen dususe uygun 0-1)
+  # --- opsiyonel yumusak anlatim (edge-tts) ---
+  anlatim_ses: "tr-TR-EmelNeural"   # anlatim sesi (erkek: tr-TR-AhmetNeural)
+  anlatim_hiz: "-12%"        # cok yavas, sakin tempo
+  anlatim_pitch: "+0Hz"
+  anlatim_seviye: 1.0        # anlatim ses seviyesi (0-1)
+  anlatim_baslangic: 3.0     # anlatim, videonun kacinci sn'sinde baslasin
+  kanal_adi: "ASMR"
+
 altyazi:
   aktif: true
   model: "small"               # faster-whisper model boyutu: tiny/base/small/medium

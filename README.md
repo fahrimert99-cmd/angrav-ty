@@ -74,11 +74,42 @@ Sistem metni bölümlere ayırır, her bölümü kendi görseliyle eşleştirir 
 - **GitHub Actions:** `Masalname` iş akışı **haftada 3** (Pzt/Çrş/Cum ~20:00 TR)
   otomatik çalışır; manuel de tetiklenebilir. Çıktı `Artifacts → masalname-video`.
 
+## 🎧 ASMR — Rahatlama / Uyku Videosu (30–60+ dk)
+
+Çizgi film ve masal hatlarından **ayrı**, uzun **ASMR** videoları üretir.
+**Telifsiz, tamamen kodla üretilen** ambient ses ortamı (yağmur, okyanus
+dalgaları, şömine/ateş, gece/orman, rüzgâr, beyaz/pembe/kahverengi gürültü) ile
+**sakinleştirici görsellerin** yavaş "Ken Burns" akışını birleştirir.
+**Hiçbir API anahtarı gerektirmez** — ses `numpy` ile, görseller Pollinations
+(anahtarsız) ile üretilir.
+
+```bash
+python asmr.py --tema yagmur --sure 1800        # 30 dk yağmur ASMR
+python asmr.py --tema somine --sure 3600        # 60 dk şömine/ateş
+python asmr.py --tema okyanus --gorsel-sayisi 5 # okyanus dalgaları
+python asmr.py --tema gece --anlatim "..."      # yumuşak anlatımlı ASMR
+```
+
+- **Temalar:** `yagmur` · `okyanus` · `somine` · `gece` · `ruzgar` · `beyaz` ·
+  `pembe` · `kahve` (veya serbest bir görsel tarifi yazın; ses tipi metinden çözülür).
+- **Verimli üretim:** Kısa bir "Ken Burns" temel video üretilir, ardından
+  `ffmpeg` ile hedef süreye **kopyalanarak döngülenir** — böylece 60 dk'lık video
+  bile birkaç dakikalık render ile oluşur.
+- **Bellek dostu ses:** Dikişsiz (seamless) dönen ~120 sn'lik bir ambient loop
+  üretilip WAV'a hedef süreye kadar tekrar yazılır; 60 dk ses birkaç on MB bellekle çıkar.
+- **Opsiyonel anlatım:** `--anlatim` ile edge-tts (bedava) yumuşak bir anlatımı
+  ambient sesin üzerine bindirir. Ayarlar `config/ayarlar.yaml`'daki `asmr` bölümündedir.
+- **GitHub Actions:** `ASMR` iş akışı **her gün ~21:00 TR** otomatik çalışır ve
+  manuel de tetiklenebilir (tema/süre/görsel sayısı/anlatım seçilebilir). Çıktı
+  `Artifacts → asmr-video`; YouTube sırları eklenirse otomatik yüklenir.
+
 ## 🗂️ Klasör Yapısı
 
 ```
 .
-├── main.py                  # Ana orkestratör (tüm adımları sırayla çalıştırır)
+├── main.py                  # Çizgi film orkestratörü (tüm adımları sırayla çalıştırır)
+├── masal.py                 # Masalname orkestratörü (uzun uyku masalı)
+├── asmr.py                  # ASMR orkestratörü (uzun rahatlama/uyku videosu)
 ├── requirements.txt         # Python bağımlılıkları
 ├── config/
 │   ├── ayarlar.ornek.yaml   # Örnek ayar dosyası (kopyalayıp ayarlar.yaml yapın)
@@ -94,6 +125,8 @@ Sistem metni bölümlere ayırır, her bölümü kendi görseliyle eşleştirir 
     ├── animasyon.py         # SadTalker ile konuşan karakter
     ├── montaj.py            # MoviePy ile video birleştirme
     ├── altyazi.py           # faster-whisper ile altyazı
+    ├── asmr_ses.py          # ASMR ambient ses üreteci (numpy, telifsiz)
+    ├── asmr_montaj.py       # ASMR montajı (Ken Burns + ffmpeg döngü)
     └── yukleme.py           # YouTube'a yükleme
 ```
 
