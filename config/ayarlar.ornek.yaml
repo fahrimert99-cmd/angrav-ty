@@ -128,6 +128,17 @@ asmr:
   anlatim_baslangic: 3.0     # anlatim, videonun kacinci sn'sinde baslasin
   kanal_adi: "ASMR"
 
+# --- Klip birlestirme (kullanici kliplerinden uzun ASMR; python birlestir.py) ---
+# Repoya (klipler/ klasoru) yuklenen gunluk video klipleri yumusak gecisle
+# birlestirilir ve hedef sureye DONGULENIR. Kaynak uretmez; hazir klipleri isler.
+klip:
+  sure: 1800                  # hedef sure (sn): 1800 = 30 dk, 3600 = 60 dk
+  gecis_sn: 0.8              # klipler arasi yumusak crossfade suresi (sn); 0 = sert kesim
+  fps: 24                    # cikti kare/sn
+  ses: "koru"                # "koru" (klip sesi) | "ambient_ekle" (altina ambient) | "ambient_degistir"
+  ambient_tip: "yagmur"      # ses ambient_* ise: yagmur | okyanus | ates | gece | ruzgar | beyaz
+  loop_sure: 120             # ambient loop uzunlugu (sn)
+
 altyazi:
   aktif: true
   model: "small"               # faster-whisper model boyutu: tiny/base/small/medium

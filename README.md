@@ -103,6 +103,31 @@ python asmr.py --tema gece --anlatim "..."      # yumuşak anlatımlı ASMR
   manuel de tetiklenebilir (tema/süre/görsel sayısı/anlatım seçilebilir). Çıktı
   `Artifacts → asmr-video`; YouTube sırları eklenirse otomatik yüklenir.
 
+## 🎞️ Kendi Kliplerinizden Uzun ASMR (günlük, otomatik)
+
+Kendi ürettiğiniz kısa video kliplerini (örn. 4 × 10 sn) **`klipler/`** klasörüne
+koyup push ettiğinizde, `Klip Birlestir - ASMR` iş akışı **otomatik** çalışır:
+klipleri sırayla **yumuşak geçişle birleştirir**, hedef süreye (varsayılan
+**30 dk**) **döngüler** ve tek bir uzun ASMR videosu üretir. **Klip sesleri korunur.**
+
+```bash
+python birlestir.py                               # klipler/ , 30 dk
+python birlestir.py --klasor klipler --sure 3600  # 60 dk
+python birlestir.py --sure 1800 --yukle           # bitince YouTube'a yükle
+```
+
+- **Yükleme yeri:** `klipler/` altına doğrudan (`01.mp4, 02.mp4…`) veya tarih
+  alt-klasörü ile (`klipler/2026-09-02/…`). Alt-klasör varsa **en yenisi** işlenir.
+  Ayrıntı: [`klipler/README.md`](klipler/README.md).
+- **Sıra:** dosya adına göre doğal sıralama (`01, 02, 03, 10`).
+- **Verimli:** klipler kısa bir "temel" videoda birleştirilir, sonra `ffmpeg` ile
+  hedef süreye **kopyalanarak döngülenir** — uzun video birkaç dakikada çıkar.
+- **Ses seçenekleri** (`config/ayarlar.yaml` → `klip.ses`): `koru` (klip sesi) ·
+  `ambient_ekle` (klip sesinin altına telifsiz ambient) · `ambient_degistir`.
+- **Otomasyon:** `klipler/**` altına video push edilince otomatik; ayrıca
+  **Actions → "Klip Birlestir - ASMR" → Run workflow** ile manuel. Çıktı
+  `Artifacts → birlesik-asmr-video`; YouTube sırları ekliyse otomatik yüklenir.
+
 ## 🗂️ Klasör Yapısı
 
 ```
@@ -110,6 +135,8 @@ python asmr.py --tema gece --anlatim "..."      # yumuşak anlatımlı ASMR
 ├── main.py                  # Çizgi film orkestratörü (tüm adımları sırayla çalıştırır)
 ├── masal.py                 # Masalname orkestratörü (uzun uyku masalı)
 ├── asmr.py                  # ASMR orkestratörü (uzun rahatlama/uyku videosu)
+├── birlestir.py             # Kliplerden uzun ASMR birleştirici (klipler/ -> tek video)
+├── klipler/                 # Günlük yüklediğiniz video klipleri (otomatik işlenir)
 ├── requirements.txt         # Python bağımlılıkları
 ├── config/
 │   ├── ayarlar.ornek.yaml   # Örnek ayar dosyası (kopyalayıp ayarlar.yaml yapın)
@@ -127,6 +154,7 @@ python asmr.py --tema gece --anlatim "..."      # yumuşak anlatımlı ASMR
     ├── altyazi.py           # faster-whisper ile altyazı
     ├── asmr_ses.py          # ASMR ambient ses üreteci (numpy, telifsiz)
     ├── asmr_montaj.py       # ASMR montajı (Ken Burns + ffmpeg döngü)
+    ├── klip_montaj.py       # Kullanıcı kliplerini birleştir + ffmpeg döngü
     └── yukleme.py           # YouTube'a yükleme
 ```
 
