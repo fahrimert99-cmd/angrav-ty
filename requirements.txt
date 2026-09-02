@@ -21,6 +21,7 @@ Pillow                   # gorsel isleme
 # --- Montaj ---
 moviepy                  # video birlestirme
 imageio-ffmpeg           # ffmpeg saglar
+numpy                    # ambient ses uretimi (asmr_ses / uyku_muzik) + moviepy
 
 # --- Animasyon (opsiyonel, uzak) ---
 # Yalnizca animasyon.motor: "sadtalker_hf" icin gerekli (Hugging Face Space):

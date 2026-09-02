@@ -74,11 +74,69 @@ Sistem metni bölümlere ayırır, her bölümü kendi görseliyle eşleştirir 
 - **GitHub Actions:** `Masalname` iş akışı **haftada 3** (Pzt/Çrş/Cum ~20:00 TR)
   otomatik çalışır; manuel de tetiklenebilir. Çıktı `Artifacts → masalname-video`.
 
+## 🎧 ASMR — Rahatlama / Uyku Videosu (30–60+ dk)
+
+Çizgi film ve masal hatlarından **ayrı**, uzun **ASMR** videoları üretir.
+**Telifsiz, tamamen kodla üretilen** ambient ses ortamı (yağmur, okyanus
+dalgaları, şömine/ateş, gece/orman, rüzgâr, beyaz/pembe/kahverengi gürültü) ile
+**sakinleştirici görsellerin** yavaş "Ken Burns" akışını birleştirir.
+**Hiçbir API anahtarı gerektirmez** — ses `numpy` ile, görseller Pollinations
+(anahtarsız) ile üretilir.
+
+```bash
+python asmr.py --tema yagmur --sure 1800        # 30 dk yağmur ASMR
+python asmr.py --tema somine --sure 3600        # 60 dk şömine/ateş
+python asmr.py --tema okyanus --gorsel-sayisi 5 # okyanus dalgaları
+python asmr.py --tema gece --anlatim "..."      # yumuşak anlatımlı ASMR
+```
+
+- **Temalar:** `yagmur` · `okyanus` · `somine` · `gece` · `ruzgar` · `beyaz` ·
+  `pembe` · `kahve` (veya serbest bir görsel tarifi yazın; ses tipi metinden çözülür).
+- **Verimli üretim:** Kısa bir "Ken Burns" temel video üretilir, ardından
+  `ffmpeg` ile hedef süreye **kopyalanarak döngülenir** — böylece 60 dk'lık video
+  bile birkaç dakikalık render ile oluşur.
+- **Bellek dostu ses:** Dikişsiz (seamless) dönen ~120 sn'lik bir ambient loop
+  üretilip WAV'a hedef süreye kadar tekrar yazılır; 60 dk ses birkaç on MB bellekle çıkar.
+- **Opsiyonel anlatım:** `--anlatim` ile edge-tts (bedava) yumuşak bir anlatımı
+  ambient sesin üzerine bindirir. Ayarlar `config/ayarlar.yaml`'daki `asmr` bölümündedir.
+- **GitHub Actions:** `ASMR` iş akışı **her gün ~21:00 TR** otomatik çalışır ve
+  manuel de tetiklenebilir (tema/süre/görsel sayısı/anlatım seçilebilir). Çıktı
+  `Artifacts → asmr-video`; YouTube sırları eklenirse otomatik yüklenir.
+
+## 🎞️ Kendi Kliplerinizden Uzun ASMR (günlük, otomatik)
+
+Kendi ürettiğiniz kısa video kliplerini (örn. 4 × 10 sn) **`klipler/`** klasörüne
+koyup push ettiğinizde, `Klip Birlestir - ASMR` iş akışı **otomatik** çalışır:
+klipleri sırayla **yumuşak geçişle birleştirir**, hedef süreye (varsayılan
+**30 dk**) **döngüler** ve tek bir uzun ASMR videosu üretir. **Klip sesleri korunur.**
+
+```bash
+python birlestir.py                               # klipler/ , 30 dk
+python birlestir.py --klasor klipler --sure 3600  # 60 dk
+python birlestir.py --sure 1800 --yukle           # bitince YouTube'a yükle
+```
+
+- **Yükleme yeri:** `klipler/` altına doğrudan (`01.mp4, 02.mp4…`) veya tarih
+  alt-klasörü ile (`klipler/2026-09-02/…`). Alt-klasör varsa **en yenisi** işlenir.
+  Ayrıntı: [`klipler/README.md`](klipler/README.md).
+- **Sıra:** dosya adına göre doğal sıralama (`01, 02, 03, 10`).
+- **Verimli:** klipler kısa bir "temel" videoda birleştirilir, sonra `ffmpeg` ile
+  hedef süreye **kopyalanarak döngülenir** — uzun video birkaç dakikada çıkar.
+- **Ses seçenekleri** (`config/ayarlar.yaml` → `klip.ses`): `koru` (klip sesi) ·
+  `ambient_ekle` (klip sesinin altına telifsiz ambient) · `ambient_degistir`.
+- **Otomasyon:** `klipler/**` altına video push edilince otomatik; ayrıca
+  **Actions → "Klip Birlestir - ASMR" → Run workflow** ile manuel. Çıktı
+  `Artifacts → birlesik-asmr-video`; YouTube sırları ekliyse otomatik yüklenir.
+
 ## 🗂️ Klasör Yapısı
 
 ```
 .
-├── main.py                  # Ana orkestratör (tüm adımları sırayla çalıştırır)
+├── main.py                  # Çizgi film orkestratörü (tüm adımları sırayla çalıştırır)
+├── masal.py                 # Masalname orkestratörü (uzun uyku masalı)
+├── asmr.py                  # ASMR orkestratörü (uzun rahatlama/uyku videosu)
+├── birlestir.py             # Kliplerden uzun ASMR birleştirici (klipler/ -> tek video)
+├── klipler/                 # Günlük yüklediğiniz video klipleri (otomatik işlenir)
 ├── requirements.txt         # Python bağımlılıkları
 ├── config/
 │   ├── ayarlar.ornek.yaml   # Örnek ayar dosyası (kopyalayıp ayarlar.yaml yapın)
@@ -94,6 +152,9 @@ Sistem metni bölümlere ayırır, her bölümü kendi görseliyle eşleştirir 
     ├── animasyon.py         # SadTalker ile konuşan karakter
     ├── montaj.py            # MoviePy ile video birleştirme
     ├── altyazi.py           # faster-whisper ile altyazı
+    ├── asmr_ses.py          # ASMR ambient ses üreteci (numpy, telifsiz)
+    ├── asmr_montaj.py       # ASMR montajı (Ken Burns + ffmpeg döngü)
+    ├── klip_montaj.py       # Kullanıcı kliplerini birleştir + ffmpeg döngü
     └── yukleme.py           # YouTube'a yükleme
 ```
 
