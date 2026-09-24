@@ -156,3 +156,24 @@ YouTube'a yüklemek için: `--yukle` ekleyin veya `ayarlar.yaml`'da `yukleme.akt
 ---
 *Bu depo yalnızca kod ve yapı içindir; ağır AI üretimi yerel makinede veya
 Colab'da çalışır.*
+
+---
+
+## 🧩 Master Prompt Oluşturucu (`master_prompt.py`)
+
+Claude, ChatGPT, Gemini gibi asistanlar için bölümlü (Rol, Bağlam, Görev,
+Kurallar, Üslup, Hitap/İmza, Çıktı Formatı, Örnekler, Kalite Kontrol) ve XML
+etiketli bir **master prompt** üretir. Yalnızca standart kütüphane kullanır.
+
+```bash
+python master_prompt.py                      # adım adım sihirbaz
+python master_prompt.py --sablon kalite      # ISO/5S hazır şablonuyla başla
+python master_prompt.py --listele            # şablonlar: genel, kalite, masal, kod
+python master_prompt.py --sablon masal --gorev "Paylaşma üzerine masal" --sessiz
+python master_prompt.py --json cevaplar.json # kayıtlı cevaplardan üret
+python master_prompt.py --kaydet             # cevapları .json olarak da sakla
+python master_prompt.py --iyilestir          # Claude API ile cilala (ANTHROPIC_API_KEY)
+```
+
+Çıktı `cikti/master_prompt_<tarih>.md` dosyasına yazılır; sonunda bir doluluk
+puanı (0-100) ve eksik bölümler için öneriler gösterilir.
